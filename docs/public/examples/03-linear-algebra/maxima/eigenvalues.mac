@@ -1,0 +1,237 @@
+/* 第3章：线性代数 - 特征值与特征向量 */
+/* 本文件演示如何在Maxima中计算特征值和特征向量 */
+/* 包括：特征多项式、对角化、物理应用等 */
+
+display("=== 特征值与特征向量示例 ===")$
+
+/* 辅助函数：计算矩阵的迹 */
+mat_trace(M) := block([n: length(M)], sum(M[i][i], i, 1, n))$
+
+/* 1. 基本特征值计算 */
+display("--- 1. 基本特征值计算 ---")$
+
+/* 定义矩阵 */
+A: matrix([4, -2], [1, 1])$
+display("矩阵 A:")$
+display(A)$
+
+/* 计算特征多项式 */
+char_poly: charpoly(A, lambda)$
+display("特征多项式:")$
+display(char_poly)$
+
+/* 求解特征值 */
+eigenvals: solve(char_poly = 0, lambda)$
+display("特征值:")$
+display(eigenvals)$
+
+/* 计算特征向量 */
+eig_result: eigenvectors(A)$
+display("特征值和特征向量:")$
+display(eig_result)$
+
+/* 2. 特征多项式的展开 */
+display("--- 2. 特征多项式的展开 ---")$
+
+/* 展开特征多项式 */
+char_poly_expanded: expand(char_poly)$
+display("展开的特征多项式:")$
+display(char_poly_expanded)$
+
+/* 使用迹和行列式表示 */
+trace_A: mat_trace(A)$
+det_A: determinant(A)$
+display("迹 tr(A) =", trace_A)$
+display("行列式 det(A) =", det_A)$
+display("特征多项式: λ² - tr(A)λ + det(A) = 0")$
+
+/* 3. 矩阵的迹和行列式与特征值的关系 */
+display("--- 3. 迹和行列式与特征值的关系 ---")$
+
+/* 特征值之和等于迹 */
+eigenval_list: map(rhs, eigenvals)$
+sum_eigenvals: apply("+", eigenval_list)$
+sum_eigenvals: ratsimp(sum_eigenvals)$
+display("特征值之和 =", sum_eigenvals)$
+display("迹 =", trace_A)$
+
+/* 特征值之积等于行列式 */
+prod_eigenvals: apply("*", eigenval_list)$
+prod_eigenvals: ratsimp(prod_eigenvals)$
+display("特征值之积 =", prod_eigenvals)$
+display("行列式 =", det_A)$
+
+/* 4. 对角化 */
+display("--- 4. 对角化 ---")$
+
+/* 计算特征向量 */
+eig_vecs: eigenvectors(A)$
+eigenvalues: eig_vecs[1][1]$
+eigenvectors_list: eig_vecs[2]$
+
+display("特征值:", eigenvalues)$
+display("特征向量:", eigenvectors_list)$
+
+/* 构建对角矩阵 D */
+n_ev: length(eigenvalues)$
+D: genmatrix(lambda([i,j], if i=j then eigenvalues[i] else 0), n_ev, n_ev)$
+display("对角矩阵 D:")$
+display(D)$
+
+/* 构建特征向量矩阵 P（eigenvectors 返回的每个向量多一层嵌套） */
+P: transpose(matrix(eigenvectors_list[1][1], eigenvectors_list[2][1]))$
+display("特征向量矩阵 P:")$
+display(P)$
+
+/* 验证 A = P * D * P^(-1) */
+A_reconstructed: ratsimp(P . D . invert(P))$
+display("重构的矩阵 P*D*P^(-1):")$
+display(A_reconstructed)$
+
+/* 5. 计算矩阵的幂 */
+display("--- 5. 计算矩阵的幂 ---")$
+
+/* 使用对角化计算 A^n */
+n: 5$
+A_n: ratsimp(P . D^n . invert(P))$
+display("A^5 (使用对角化):")$
+display(A_n)$
+
+/* 直接计算验证 */
+A_n_direct: ratsimp(A . A . A . A . A)$
+display("A^5 (直接计算):")$
+display(A_n_direct)$
+
+/* 6. 3x3 矩阵的特征值 */
+display("--- 6. 3x3 矩阵的特征值 ---")$
+
+B: matrix([2, 1, 0], [0, 2, 0], [0, 0, 3])$
+display("矩阵 B:")$
+display(B)$
+
+char_poly_B: charpoly(B, lambda)$
+display("特征多项式:")$
+display(char_poly_B)$
+
+eigenvals_B: solve(char_poly_B = 0, lambda)$
+display("特征值:")$
+display(eigenvals_B)$
+
+eig_B: eigenvectors(B)$
+display("特征向量:")$
+display(eig_B)$
+
+/* 7. 对称矩阵的特征值 */
+display("--- 7. 对称矩阵的特征值 ---")$
+
+/* 对称矩阵 */
+S: matrix([4, 2, 1], [2, 5, 3], [1, 3, 6])$
+display("对称矩阵 S:")$
+display(S)$
+
+/* 验证对称性 */
+is_symmetric: is(equal(S, transpose(S)))$
+display("是否对称:", is_symmetric)$
+
+/* 对称矩阵的特征值都是实数 */
+eig_S: eigenvectors(S)$
+eigenvalues_S: eig_S[1][1]$
+display("特征值（均为实数）:", eigenvalues_S)$
+
+/* 8. 物理应用：振动系统 */
+display("--- 8. 物理应用：耦合振动系统 ---")$
+
+/* 双摆系统的小振动方程 */
+/* M * x'' + K * x = 0 */
+
+/* 质量矩阵 */
+M: matrix([2, 1], [1, 1])$
+/* 刚度矩阵 */
+K: matrix([2, 0], [0, 1])$
+
+display("质量矩阵 M:")$
+display(M)$
+display("刚度矩阵 K:")$
+display(K)$
+
+/* 广义特征值问题: K*v = omega^2 * M*v */
+/* 转换为标准特征值问题: M^(-1)*K*v = omega^2*v */
+M_inv_K: ratsimp(invert(M) . K)$
+display("M^(-1)*K:")$
+display(M_inv_K)$
+
+/* 求解特征值（固有频率的平方） */
+char_poly_vib: charpoly(M_inv_K, lambda)$
+omega_sq: solve(char_poly_vib = 0, lambda)$
+display("固有频率的平方 (ω²):")$
+display(omega_sq)$
+
+/* 固有频率 */
+omega: map(lambda([x], sqrt(rhs(x))), omega_sq)$
+display("固有频率 (ω):")$
+display(omega)$
+
+/* 9. 稳定性分析 */
+display("--- 9. 稳定性分析 ---")$
+
+/* 线性系统的稳定性：dx/dt = A*x */
+/* 稳定条件：所有特征值的实部为负 */
+
+A_stable: matrix([-1, 2], [-3, -4])$
+A_unstable: matrix([1, 2], [3, 4])$
+
+display("系统1 (应稳定):")$
+display(A_stable)$
+eig1: eigenvalues(A_stable)$
+display("特征值:", eig1)$
+
+display("系统2 (应不稳定):")$
+display(A_unstable)$
+eig2: eigenvalues(A_unstable)$
+display("特征值:", eig2)$
+
+/* 10. 符号特征值计算 */
+display("--- 10. 符号特征值计算 ---")$
+
+/* 2x2 符号矩阵 */
+S_sym: matrix([a, b], [c, d])$
+display("符号矩阵:")$
+display(S_sym)$
+
+/* 符号特征多项式 */
+char_poly_sym: expand(charpoly(S_sym, lambda))$
+display("符号特征多项式:")$
+display(char_poly_sym)$
+
+/* 使用迹和行列式表示 */
+trace_S: a + d$
+det_S: a*d - b*c$
+display("迹 =", trace_S)$
+display("行列式 =", det_S)$
+
+/* 11. 矩阵指数（概念） */
+display("--- 11. 矩阵指数（概念）---")$
+
+/* 矩阵指数 e^(At) 可以通过对角化计算 */
+/* e^(At) = P * e^(Dt) * P^(-1) */
+
+/* 对于对角矩阵 D，e^(Dt) 是对角元素的指数 */
+display("对于对角矩阵 D = diag(λ1, λ2):")$
+display("e^(Dt) = diag(e^(λ1*t), e^(λ2*t))")$
+
+/* 12. 特征值的扰动 */
+display("--- 12. 特征值的扰动 ---")$
+
+/* 特征值对矩阵元素的敏感度 */
+A_pert: matrix([4.1, -2], [1, 1.1])$
+display("扰动后的矩阵:")$
+display(A_pert)$
+
+eig_pert: solve(charpoly(A_pert, lambda) = 0, lambda)$
+display("扰动后的特征值:")$
+display(eig_pert)$
+
+display("原始特征值:")$
+display(eigenvals)$
+
+display("=== 特征值与特征向量示例完成 ===")$

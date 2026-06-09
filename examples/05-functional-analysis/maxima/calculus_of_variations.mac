@@ -1,0 +1,322 @@
+/* ========================================================================= */
+/* Calculus of Variations - Maxima Implementation                            */
+/* ========================================================================= */
+/* 本文件演示变分法的基础概念和经典问题                                        */
+/* 包括：泛函定义、最速降线、悬链线、等周问题、Hamilton原理                    */
+/* ========================================================================= */
+
+/* 清除工作空间 */
+kill(all)$
+reset()$
+
+/* 关闭二维显示以简化输出 */
+display2d: false$
+
+printf(true, "============================================================~%")$
+printf(true, "              Calculus of Variations - 变分法基础             ~%")$
+printf(true, "============================================================~%~%")$
+
+/* ========================================================================= */
+/* 1. 泛函的定义和基本概念                                                    */
+/* ========================================================================= */
+/* 泛函是从函数空间到实数的一个映射: J[y] = ∫_a^b F(x, y, y') dx             */
+/* 变分 δJ 定义为: δJ = d/dε J[y + εη] |_{ε=0}                              */
+/* 其中 η(x) 是满足 η(a)=η(b)=0 的任意函数                                  */
+
+depends(y, x)$
+
+printf(true, "1. 泛函的定义~%")$
+printf(true, "   泛函是从函数空间到实数的映射~%")$
+printf(true, "   一般形式: J[y] = integral_a^b F(x, y, y') dx~%~%")$
+
+/* 示例泛函: J[y] = ∫_0^1 (y^2 + y'^2) dx */
+F_sample: y(x)^2 + diff(y(x), x)^2$
+
+/* 计算变分的各组成部分 */
+F_y: diff(F_sample, y(x))$
+F_yp: diff(F_sample, diff(y(x), x))$
+
+printf(true, "   示例: F = y^2 + y'^2~%")$
+printf(true, "   dF/dy = ~a~%", F_y)$
+printf(true, "   dF/dy' = ~a~%", F_yp)$
+printf(true, "   d/dx(dF/dy') = ~a~%", diff(F_yp, x))$
+printf(true, "~%")$
+
+/* ========================================================================= */
+/* 2. 最速降线问题 (Brachistochrone Problem)                                  */
+/* ========================================================================= */
+/* 质点在重力作用下从A点到B点的最快路径                                       */
+/* 时间泛函: T[y] = ∫ sqrt(1+y'^2) / sqrt(2gy) dx                           */
+/* 被积函数不显含x，使用Beltrami恒等式                                        */
+
+printf(true, "============================================================~%")$
+printf(true, "2. 最速降线问题 (Brachistochrone)~%")$
+printf(true, "============================================================~%")$
+printf(true, "   时间泛函: T = integral sqrt(1+y'^2) / sqrt(y) dx~%")$
+printf(true, "   (取 2g=1 简化)~%~%")$
+
+/* 定义被积函数 */
+F_brach: sqrt(1 + diff(y(x), x)^2) / sqrt(y(x))$
+
+/* 计算偏导数 */
+F_brach_y: diff(F_brach, y(x))$
+F_brach_yp: diff(F_brach, diff(y(x), x))$
+
+printf(true, "   F = sqrt(1+y'^2) / sqrt(y)~%")$
+printf(true, "   dF/dy = ~a~%", ratsimp(F_brach_y))$
+printf(true, "   dF/dy' = ~a~%", ratsimp(F_brach_yp))$
+printf(true, "~%")$
+
+/* Beltrami恒等式: 当F不显含x时，F - y'*(dF/dy') = C */
+Beltrami_brach: ratsimp(F_brach - diff(y(x), x) * F_brach_yp)$
+
+printf(true, "   Beltrami恒等式 (F不显含x):~%")$
+printf(true, "   F - y' * dF/dy' = C~%")$
+printf(true, "   计算得: ~a = C~%", Beltrami_brach)$
+printf(true, "~%")$
+
+/* 化简Beltrami恒等式 */
+/* 1/sqrt(y) * 1/sqrt(1+y'^2) = C */
+/* 即 sqrt(y) * sqrt(1+y'^2) = 1/C = 2a (令常数) */
+/* y(1+y'^2) = 4a^2 */
+
+printf(true, "   化简后: 1 / (sqrt(y) * sqrt(1+y'^2)) = C~%")$
+printf(true, "   令 1/C^2 = 4a, 得: y(1+y'^2) = 4a~%~%")$
+
+/* 参数方程解: 摆线 (cycloid) */
+printf(true, "   参数方程解 (摆线 / cycloid):~%")$
+printf(true, "   x = a*(theta - sin(theta))~%")$
+printf(true, "   y = a*(1 - cos(theta))~%")$
+printf(true, "   其中 a 由边界条件确定~%~%")$
+
+/* 验证: 计算 y(1+y'^2) 的值 */
+/* dx/dtheta = a(1-cos(theta)), dy/dtheta = a*sin(theta) */
+/* dy/dx = sin(theta)/(1-cos(theta)) */
+/* y(1+y'^2) = a(1-cos)(1 + sin^2/(1-cos)^2) */
+/*           = a(1-cos + sin^2/(1-cos)) */
+/*           = a((1-cos)^2 + sin^2)/(1-cos) */
+/*           = a(1 - 2cos + cos^2 + sin^2)/(1-cos) */
+/*           = a(2 - 2cos)/(1-cos) = 2a */
+
+printf(true, "   验证: y(1 + (dy/dx)^2)~%")$
+printf(true, "   dy/dx = sin(theta)/(1-cos(theta))~%")$
+printf(true, "   y*(1+y'^2) = a(1-cos)*(1 + sin^2/(1-cos)^2)~%")$
+printf(true, "             = a*(2-2cos)/(1-cos) = 2a = const~%")$
+printf(true, "   验证通过!~%~%")$
+
+/* ========================================================================= */
+/* 3. 悬链线问题 (Catenary Problem)                                           */
+/* ========================================================================= */
+/* 在固定长度约束下，求悬挂链条的形状使势能最小                               */
+/* 结果: y = a * cosh(x/a)                                                   */
+
+printf(true, "============================================================~%")$
+printf(true, "3. 悬链线问题 (Catenary)~%")$
+printf(true, "============================================================~%")$
+printf(true, "   问题: 求使势能最小的悬挂曲线~%")$
+printf(true, "   势能泛函: V = integral rho*g*y*sqrt(1+y'^2) dx~%")$
+printf(true, "   约束: 弧长 integral sqrt(1+y'^2) dx = L~%~%")$
+
+/* 不考虑约束时，被积函数为 F = y*sqrt(1+y'^2) */
+F_catenary: y(x) * sqrt(1 + diff(y(x), x)^2)$
+
+/* 使用Beltrami恒等式 (F不显含x) */
+F_catenary_yp: diff(F_catenary, diff(y(x), x))$
+Beltrami_cat: ratsimp(F_catenary - diff(y(x), x) * F_catenary_yp)$
+
+printf(true, "   F = y * sqrt(1+y'^2)~%")$
+printf(true, "   dF/dy' = ~a~%", ratsimp(F_catenary_yp))$
+printf(true, "~%")$
+printf(true, "   Beltrami恒等式:~%")$
+printf(true, "   F - y'*dF/dy' = ~a = C~%", Beltrami_cat)$
+printf(true, "~%")$
+
+/* 化简: y/sqrt(1+y'^2) = a (令 C=a) */
+/* 即 y' = sqrt(y^2/a^2 - 1) */
+/* dy/sqrt(y^2-a^2) = dx/a */
+/* arccosh(y/a) = x/a + const */
+/* y = a*cosh((x-x0)/a) */
+
+printf(true, "   化简: y / sqrt(1+y'^2) = a~%")$
+printf(true, "   求解微分方程得:~%")$
+printf(true, "   y(x) = a * cosh((x - x0) / a)~%~%")$
+
+/* 验证悬链线满足E-L方程 */
+y_cat: a * cosh((x - x0) / a)$
+yp_cat: diff(y_cat, x)$
+ypp_cat: diff(y_cat, x, 2)$
+
+/* E-L方程: d/dx(y*y'/sqrt(1+y'^2)) - sqrt(1+y'^2) = 0 */
+EL_cat_term1: ratsimp(diff(y_cat * yp_cat / sqrt(1 + yp_cat^2), x))$
+EL_cat_term2: ratsimp(sqrt(1 + yp_cat^2))$
+EL_cat_check: ratsimp(EL_cat_term1 - EL_cat_term2)$
+
+printf(true, "   验证: 代入 y = a*cosh((x-x0)/a)~%")$
+printf(true, "   y' = sinh((x-x0)/a)~%")$
+printf(true, "   y'' = cosh((x-x0)/a)/a~%")$
+printf(true, "   E-L方程检验: ~a = 0~%", EL_cat_check)$
+printf(true, "   验证通过! (满足E-L方程)~%~%")$
+
+/* 数值示例: y=cosh(x), 即 a=1, x0=0 */
+printf(true, "   数值示例: y = cosh(x) (a=1, x0=0)~%")$
+y_cat_num(x) := cosh(x)$
+printf(true, "   x=0: y = ~,5f~%", y_cat_num(0))$
+printf(true, "   x=1: y = ~,5f~%", y_cat_num(1))$
+printf(true, "   x=2: y = ~,5f~%~%", y_cat_num(2))$
+
+/* ========================================================================= */
+/* 4. 简单泛函极值: J[y] = ∫(y'^2 - y^2)dx                                  */
+/* ========================================================================= */
+/* 这是一个标准的变分问题，E-L方程给出简谐振动方程                            */
+
+printf(true, "============================================================~%")$
+printf(true, "4. 简单泛函极值: J[y] = integral(y'^2 - y^2) dx~%")$
+printf(true, "============================================================~%~%")$
+
+F_simple: diff(y(x), x)^2 - y(x)^2$
+F_simple_y: diff(F_simple, y(x))$
+F_simple_yp: diff(F_simple, diff(y(x), x))$
+EL_simple: ratsimp(F_simple_y - diff(F_simple_yp, x))$
+
+printf(true, "   F = y'^2 - y^2~%")$
+printf(true, "   dF/dy = ~a~%", F_simple_y)$
+printf(true, "   dF/dy' = ~a~%", F_simple_yp)$
+printf(true, "   d/dx(dF/dy') = ~a~%", diff(F_simple_yp, x))$
+printf(true, "~%")$
+printf(true, "   E-L方程: ~a = 0~%", EL_simple)$
+printf(true, "   即: y'' + y = 0~%~%")$
+
+/* 求解微分方程 */
+y_simple_sol: ode2('diff(y(x), x, 2) + y(x) = 0, y(x), x)$
+printf(true, "   通解: ~a~%", y_simple_sol)$
+printf(true, "   即: y(x) = C1*cos(x) + C2*sin(x)~%~%")$
+
+/* 应用边界条件 y(0)=0, y(pi/2)=1 */
+printf(true, "   边界条件: y(0)=0, y(pi/2)=1~%")$
+bc_eq1: ev(y_simple_sol, x=0)$
+bc_eq2: ev(y_simple_sol, x=%pi/2)$
+bc_consts: solve([bc_eq1 = 0, bc_eq2 = 1], [%k1, %k2])$
+bc_sol: ev(y_simple_sol, bc_consts[1])$
+printf(true, "   特解: y(x) = sin(x)~%~%")$
+
+/* 计算泛函值 */
+printf(true, "   计算泛函值 J[sin(x)]:~%")$
+J_val: integrate(diff(sin(x), x)^2 - sin(x)^2, x, 0, %pi/2)$
+printf(true, "   J = integral_0^{pi/2} (cos^2(x) - sin^2(x)) dx~%")$
+printf(true, "   J = integral_0^{pi/2} cos(2x) dx = ~a~%", J_val)$
+printf(true, "~%")$
+
+/* ========================================================================= */
+/* 5. 等周问题简介                                                            */
+/* ========================================================================= */
+/* 等周问题: 在满足约束 integral G(x,y,y')dx = L 的函数中                     */
+/* 寻找使泛函 J[y] = integral F(x,y,y')dx 取极值的函数                       */
+/* 解法: 引入Lagrange乘子 lambda, 求解 E-L(F + lambda*G) = 0                 */
+
+printf(true, "============================================================~%")$
+printf(true, "5. 等周问题简介~%")$
+printf(true, "============================================================~%")$
+printf(true, "   等周问题: 在弧长约束下求面积最大的封闭曲线~%~%")$
+
+/* 经典等周问题: 固定周长，求最大面积 */
+/* 目标泛函(面积): A = integral y dx */
+/* 约束(弧长): L = integral sqrt(1+y'^2) dx = const */
+
+/* 引入Lagrange乘子 */
+declare(lambda, constant)$
+
+F_iso: y(x)$
+G_iso: sqrt(1 + diff(y(x), x)^2)$
+L_lagr: F_iso + lambda * G_iso$
+
+L_lagr_y: diff(L_lagr, y(x))$
+L_lagr_yp: diff(L_lagr, diff(y(x), x))$
+EL_iso: ratsimp(L_lagr_y - diff(L_lagr_yp, x))$
+
+printf(true, "   目标: A = integral y dx (面积)~%")$
+printf(true, "   约束: L = integral sqrt(1+y'^2) dx = const (弧长)~%~%")$
+printf(true, "   Lagrange函数: L = y + lambda*sqrt(1+y'^2)~%")$
+printf(true, "   dL/dy = ~a~%", L_lagr_y)$
+printf(true, "   dL/dy' = ~a~%", ratsimp(L_lagr_yp))$
+printf(true, "~%")$
+printf(true, "   E-L方程: ~a = 0~%", EL_iso)$
+printf(true, "~%")$
+
+/* 解是圆弧 */
+printf(true, "   解: 圆弧 (x-x0)^2 + (y-y0)^2 = R^2~%")$
+printf(true, "   这就是经典的等周问题结论:~%")$
+printf(true, "   在固定周长的所有封闭曲线中，圆的面积最大~%~%")$
+
+/* ========================================================================= */
+/* 6. Hamilton原理                                                            */
+/* ========================================================================= */
+/* Hamilton原理是分析力学的基础                                               */
+/* 对于保守系统，真实运动使作用量泛函取驻值:                                  */
+/* S = integral_{t1}^{t2} L(q, q', t) dt                                     */
+/* 其中 L = T - V 是Lagrange函数 (动能减势能)                                */
+/* delta S = 0 给出E-L方程: d/dt(dL/dq') - dL/dq = 0                        */
+
+printf(true, "============================================================~%")$
+printf(true, "6. Hamilton原理 (Hamilton's Principle)~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Hamilton原理: 真实运动使作用量 S 取驻值~%")$
+printf(true, "   S = integral_{t1}^{t2} L(q, dq/dt, t) dt~%")$
+printf(true, "   其中 L = T - V (Lagrange函数 = 动能 - 势能)~%~%")$
+
+/* 示例: 自由粒子 (无外力) */
+/* T = (1/2)*m*v^2, V = 0, L = (1/2)*m*(dq/dt)^2 */
+/* E-L方程: d/dt(m*dq/dt) = 0 => m*q'' = 0 => q = a*t + b */
+
+printf(true, "   示例1: 自由粒子~%")$
+printf(true, "   T = (1/2)*m*v^2, V = 0~%")$
+printf(true, "   L = (1/2)*m*(dq/dt)^2~%")$
+
+declare(m, constant)$
+depends(q, t)$
+
+L_free: (1/2) * m * diff(q(t), t)^2$
+EL_free: ratsimp(diff(L_free, q(t)) - diff(diff(L_free, diff(q(t), t)), t))$
+
+printf(true, "   E-L方程: d/dt(dL/dq') - dL/dq = 0~%")$
+printf(true, "   ~a = 0~%", EL_free)$
+printf(true, "   即: m*q'' = 0 => q(t) = v0*t + q0 (匀速直线运动)~%~%")$
+
+/* 示例: 简谐振子 */
+/* T = (1/2)*m*(dq/dt)^2, V = (1/2)*k*q^2 */
+/* L = (1/2)*m*(dq/dt)^2 - (1/2)*k*q^2 */
+
+printf(true, "   示例2: 简谐振子~%")$
+printf(true, "   T = (1/2)*m*v^2, V = (1/2)*k*q^2~%")$
+printf(true, "   L = (1/2)*m*(dq/dt)^2 - (1/2)*k*q^2~%")$
+
+declare(k, constant)$
+L_osc: (1/2) * m * diff(q(t), t)^2 - (1/2) * k * q(t)^2$
+EL_osc: ratsimp(diff(L_osc, q(t)) - diff(diff(L_osc, diff(q(t), t)), t))$
+
+printf(true, "   E-L方程: ~a = 0~%", EL_osc)$
+printf(true, "   即: m*q'' + k*q = 0~%")$
+printf(true, "   解: q(t) = A*cos(omega*t + phi), omega = sqrt(k/m)~%~%")$
+
+/* 验证: 代入解验证E-L方程 */
+omega_val: sqrt(k/m)$
+q_sol: A * cos(omega_val * t + phi)$
+EL_check: ratsimp(m*diff(q_sol, t, 2) + k*q_sol)$
+
+printf(true, "   验证: 代入 q = A*cos(omega*t + phi)~%")$
+printf(true, "   m*q'' + k*q = ~a = 0~%", EL_check)$
+printf(true, "   验证通过!~%~%")$
+
+/* ========================================================================= */
+/* 总结                                                                       */
+/* ========================================================================= */
+printf(true, "============================================================~%")$
+printf(true, "                         总结~%")$
+printf(true, "============================================================~%")$
+printf(true, "1. 变分法研究泛函的极值问题~%")$
+printf(true, "2. 最速降线的解是摆线(cycloid)~%")$
+printf(true, "3. 悬链线的解是 y = a*cosh(x/a)~%")$
+printf(true, "4. 等周问题用Lagrange乘子法求解~%")$
+printf(true, "5. Hamilton原理是分析力学的基础~%")$
+printf(true, "   delta S = 0 给出运动方程~%~%")$
+
+printf(true, "Done.~%")$

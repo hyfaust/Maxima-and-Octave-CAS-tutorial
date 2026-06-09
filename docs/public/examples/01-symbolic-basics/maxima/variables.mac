@@ -1,0 +1,105 @@
+/* Symbolic Variable Definition Examples for Maxima */
+/* 符号变量定义示例 - 适用于Maxima */
+/* 本文件演示如何在Maxima中定义和操作符号变量 */
+/* 作者: CAS Learn Tutorial */
+/* 日期: 2026-06-05 */
+
+/* 1. 基本符号变量定义 */
+/* 在Maxima中，符号变量无需显式声明即可使用 */
+x: x;
+y: y;
+z: z;
+
+/* 显示变量 */
+printf(true, "变量 x: ~a~%", x);
+printf(true, "变量 y: ~a~%", y);
+printf(true, "变量 z: ~a~%", z);
+
+/* 2. 符号常量 */
+/* 定义符号常量 */
+pi_sym: %pi;
+e_sym: %e;
+
+/* 显示符号常量 */
+printf(true, "符号化的π: ~a~%", pi_sym);
+printf(true, "符号化的e: ~a~%", e_sym);
+
+/* 获取数值近似 */
+printf(true, "π的数值近似: ~a~%", float(%pi));
+printf(true, "e的数值近似: ~a~%", float(%e));
+
+/* 3. 符号表达式 */
+/* 创建符号表达式 */
+expr1: x^2 + 2*x + 1;
+expr2: sin(x) + cos(y);
+expr3: exp(z) * log(z);
+
+/* 显示表达式 */
+printf(true, "表达式1: ~a~%", expr1);
+printf(true, "表达式2: ~a~%", expr2);
+printf(true, "表达式3: ~a~%", expr3);
+
+/* 4. 符号矩阵 */
+/* 创建符号矩阵 */
+A: matrix([a, b], [c, d]);
+B: matrix([1, 2], [3, 4]);
+
+/* 显示矩阵 */
+printf(true, "符号矩阵 A:~%");
+disp(A);
+printf(true, "数值矩阵 B:~%");
+disp(B);
+
+/* 5. 符号函数 */
+/* 定义符号函数 */
+f(x) := x^3 - 2*x + 1;
+g(x, y) := x^2 + y^2;
+
+/* 显示函数 */
+printf(true, "函数 f(x) = ~a~%", f(x));
+printf(true, "函数 g(x,y) = ~a~%", g(x, y));
+
+/* 计算函数值 */
+printf(true, "f(2) = ~a~%", f(2));
+printf(true, "g(3,4) = ~a~%", g(3, 4));
+
+/* 6. 符号与数值的转换 */
+/* 符号转数值 */
+sym_val: 355/113;
+num_val: float(sym_val);
+printf(true, "符号值: ~a~%", sym_val);
+printf(true, "数值: ~a~%", num_val);
+
+/* 数值转符号 */
+num: 2.718281828;
+sym_num: rat(num);
+printf(true, "数值 ~a 转符号: ~a~%", num, sym_num);
+
+/* 7. 带假设条件的符号变量 */
+/* 定义正实数符号变量 */
+declare(t, real);
+assume(t > 0);
+
+/* 定义整数符号变量 */
+declare(p, integer);
+
+/* 显示假设条件 */
+printf(true, "变量 t 的假设: ~a~%", facts(t));
+printf(true, "变量 p 的假设: ~a~%", facts(p));
+
+/* 8. 符号数组 */
+/* 创建符号数组 */
+arr: make_array(any, 5);
+arr[0]: x;
+arr[1]: y;
+arr[2]: z;
+arr[3]: x^2;
+arr[4]: y^2;
+
+/* 显示数组 */
+printf(true, "符号数组: ~a~%", arr);
+
+/* 9. 清理工作区 */
+/* 注意：在实际使用中，根据需要决定是否清理 */
+/* kill(x, y, z, a, b, c); */
+printf(true, "~%符号变量定义示例完成！~%");

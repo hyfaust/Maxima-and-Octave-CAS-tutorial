@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# VitePress build output
+docs/.vitepress/dist/
+
+# Qwen Code
+.qwen/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Octave generated images
+*.png
+
+# Backup files
+*.bak

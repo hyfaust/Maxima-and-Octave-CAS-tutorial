@@ -1,0 +1,200 @@
+/* 高阶常微分方程示例 */
+/* 本文件演示如何使用Maxima求解高阶常微分方程 */
+/* 包括常系数线性齐次/非齐次方程 */
+
+/* 显示标题 */
+display2d: false$  /* 禁用2D显示以便于阅读 */
+
+print("=== 高阶常微分方程示例 ===")$
+print("")$
+
+/* 1. 二阶常系数线性齐次方程 */
+print("1. 二阶常系数线性齐次方程: y'' - 3y' + 2y = 0")$
+print("-----------------------------------------------")$
+
+/* 定义微分方程 */
+ode1: 'diff(y, x, 2) - 3*'diff(y, x) + 2*y = 0$
+
+/* 求解微分方程 */
+sol1: ode2(ode1, y, x)$
+print("通解: ", sol1)$
+
+/* 求满足初始条件 y(0)=1, y'(0)=0 的特解 */
+sol1_specific: ic2(sol1, x=0, y=1, 'diff(y,x)=0)$
+print("满足 y(0)=1, y'(0)=0 的特解: ", sol1_specific)$
+
+/* 绘制特解曲线 */
+wxplot2d(rhs(sol1_specific), [x, -1, 2],
+         [title, "y'' - 3y' + 2y = 0, y(0)=1, y'(0)=0"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+print("")$
+print("")$
+
+/* 2. 二阶常系数线性非齐次方程 */
+print("2. 二阶常系数线性非齐次方程: y'' - 3y' + 2y = e^{3x}")$
+print("-----------------------------------------------------")$
+
+/* 定义微分方程 */
+ode2: 'diff(y, x, 2) - 3*'diff(y, x) + 2*y = exp(3*x)$
+
+/* 求解微分方程 */
+sol2: ode2(ode2, y, x)$
+print("通解: ", sol2)$
+
+/* 求满足初始条件 y(0)=0, y'(0)=1 的特解 */
+sol2_specific: ic2(sol2, x=0, y=0, 'diff(y,x)=1)$
+print("满足 y(0)=0, y'(0)=1 的特解: ", sol2_specific)$
+
+/* 绘制特解曲线 */
+wxplot2d(rhs(sol2_specific), [x, -1, 2],
+         [title, "y'' - 3y' + 2y = e^{3x}, y(0)=0, y'(0)=1"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+print("")$
+print("")$
+
+/* 3. 阻尼振动示例（物理应用） */
+print("3. 阻尼振动: y'' + 0.5y' + 4y = 0")$
+print("----------------------------------")$
+
+/* 定义微分方程（阻尼振动） */
+ode3: 'diff(y, x, 2) + 0.5*'diff(y, x) + 4*y = 0$
+
+/* 求解微分方程 */
+sol3: ode2(ode3, y, x)$
+print("通解: ", sol3)$
+
+/* 求满足初始条件 y(0)=1, y'(0)=0 的特解 */
+sol3_specific: ic2(sol3, x=0, y=1, 'diff(y,x)=0)$
+print("满足 y(0)=1, y'(0)=0 的特解: ", sol3_specific)$
+
+/* 绘制特解曲线 */
+wxplot2d(rhs(sol3_specific), [x, 0, 20],
+         [title, "阻尼振动: y'' + 0.5y' + 4y = 0"],
+         [xlabel, "时间 t"], [ylabel, "位移 y"])$
+
+print("")$
+print("")$
+
+/* 4. 受迫振动示例（物理应用） */
+print("4. 受迫振动: y'' + 0.1y' + y = cos(t)")$
+print("------------------------------------")$
+
+/* 定义微分方程（受迫振动） */
+ode4: 'diff(y, x, 2) + 0.1*'diff(y, x) + y = cos(x)$
+
+/* 求解微分方程 */
+sol4: ode2(ode4, y, x)$
+print("通解: ", sol4)$
+
+/* 求满足初始条件 y(0)=0, y'(0)=0 的特解 */
+sol4_specific: ic2(sol4, x=0, y=0, 'diff(y,x)=0)$
+print("满足 y(0)=0, y'(0)=0 的特解: ", sol4_specific)$
+
+/* 绘制特解曲线（瞬态+稳态） */
+wxplot2d(rhs(sol4_specific), [x, 0, 100],
+         [title, "受迫振动: y'' + 0.1y' + y = cos(t)"],
+         [xlabel, "时间 t"], [ylabel, "位移 y"])$
+
+print("")$
+print("")$
+
+/* 5. 高阶ODE的参数研究 */
+print("5. 高阶ODE的参数研究")$
+print("--------------------")$
+
+/* 研究不同阻尼系数对振动的影响 */
+print("研究不同阻尼系数对振动的影响")$
+
+/* 对于方程 y'' + c*y' + 4*y = 0 */
+/* 分别取 c = 0.1, 0.5, 1.0, 2.0 */
+
+/* c = 0.1 */
+ode_c1: 'diff(y, x, 2) + 0.1*'diff(y, x) + 4*y = 0$
+sol_c1: ode2(ode_c1, y, x)$
+sol_c1_specific: ic2(sol_c1, x=0, y=1, 'diff(y,x)=0)$
+
+/* c = 0.5 */
+ode_c2: 'diff(y, x, 2) + 0.5*'diff(y, x) + 4*y = 0$
+sol_c2: ode2(ode_c2, y, x)$
+sol_c2_specific: ic2(sol_c2, x=0, y=1, 'diff(y,x)=0)$
+
+/* c = 1.0 */
+ode_c3: 'diff(y, x, 2) + 1.0*'diff(y, x) + 4*y = 0$
+sol_c3: ode2(ode_c3, y, x)$
+sol_c3_specific: ic2(sol_c3, x=0, y=1, 'diff(y,x)=0)$
+
+/* c = 2.0 */
+ode_c4: 'diff(y, x, 2) + 2.0*'diff(y, x) + 4*y = 0$
+sol_c4: ode2(ode_c4, y, x)$
+sol_c4_specific: ic2(sol_c4, x=0, y=1, 'diff(y,x)=0)$
+
+/* 绘制不同阻尼系数下的振动响应 */
+wxplot2d([rhs(sol_c1_specific), rhs(sol_c2_specific), 
+          rhs(sol_c3_specific), rhs(sol_c4_specific)], 
+         [x, 0, 15],
+         [title, "不同阻尼系数下的振动响应"],
+         [legend, "c=0.1", "c=0.5", "c=1.0", "c=2.0"],
+         [xlabel, "时间 t"], [ylabel, "位移 y"])$
+
+print("")$
+print("")$
+
+/* 6. 特殊高阶ODE */
+print("6. 特殊高阶ODE")$
+print("---------------")$
+
+/* 欧拉-柯西方程: x^2*y'' + a*x*y' + b*y = 0 */
+print("欧拉-柯西方程: x^2*y'' - x*y' + y = 0")$
+ode_euler: x^2*'diff(y, x, 2) - x*'diff(y, x) + y = 0$
+sol_euler: ode2(ode_euler, y, x)$
+print("通解: ", sol_euler)$
+
+/* 贝塞尔方程: x^2*y'' + x*y' + (x^2 - n^2)*y = 0 */
+print("")$
+print("贝塞尔方程 (n=0): x^2*y'' + x*y' + x^2*y = 0")$
+ode_bessel: x^2*'diff(y, x, 2) + x*'diff(y, x) + x^2*y = 0$
+sol_bessel: ode2(ode_bessel, y, x)$
+print("通解: ", sol_bessel)$
+
+print("")$
+print("")$
+
+/* 7. 数值求解高阶ODE */
+print("7. 数值求解高阶ODE")$
+print("-------------------")$
+
+/* 将二阶ODE转化为一阶ODE系统 */
+/* y'' + 0.5*y' + 4*y = 0 */
+/* 令 y1 = y, y2 = y' */
+/* 则 y1' = y2, y2' = -0.5*y2 - 4*y1 */
+
+/* 定义方程组 */
+f1: y2$
+f2: -0.5*y2 - 4*y1$
+
+/* 初始条件: y1(0)=1, y2(0)=0 */
+/* 使用龙格-库塔法数值求解 */
+rk_result: rk([f1, f2], [y1, y2], [1, 0], [t, 0, 20, 0.1])$
+t_vals: rk_result[1]$
+y1_vals: rk_result[2]$
+y2_vals: rk_result[3]$
+
+/* 绘制数值解 */
+wxplot2d([discrete, t_vals, y1_vals], [t, 0, 20],
+         [title, "数值解: y'' + 0.5y' + 4y = 0"],
+         [xlabel, "时间 t"], [ylabel, "位移 y"])$
+
+/* 绘制速度 */
+wxplot2d([discrete, t_vals, y2_vals], [t, 0, 20],
+         [title, "速度: y'"],
+         [xlabel, "时间 t"], [ylabel, "速度 y'"])$
+
+/* 相图 */
+wxplot2d([discrete, y1_vals, y2_vals], [x, -1.5, 1.5],
+         [title, "相图: y vs y'"],
+         [xlabel, "位移 y"], [ylabel, "速度 y'"])$
+
+print("")$
+print("=== 高阶ODE示例完成 ===")$

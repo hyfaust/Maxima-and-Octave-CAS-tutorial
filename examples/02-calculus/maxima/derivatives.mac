@@ -1,0 +1,252 @@
+/* derivatives.mac - 导数计算示例 */
+/* 本文件演示如何使用 Maxima 计算各种类型的导数 */
+
+/* 清除之前的定义 */
+kill(all)$
+
+/* 设置输出格式 */
+display2d: false$
+
+print("=== 导数计算示例 ===")$
+print("")$
+
+/* 1. 基本导数 */
+print("1. 基本导数计算")$
+
+/* 示例1：多项式导数 */
+f1: x^3 - 2*x^2 + 5*x - 7$
+df1: diff(f1, x)$
+d2f1: diff(f1, x, 2)$
+print("f(x) = ", f1)$
+print("f'(x) = ", df1)$
+print("f''(x) = ", d2f1)$
+
+print("")$
+
+/* 示例2：三角函数导数 */
+f2: sin(x)$
+df2: diff(f2, x)$
+print("sin(x) 的导数: ", df2)$
+
+f3: cos(x)$
+df3: diff(f3, x)$
+print("cos(x) 的导数: ", df3)$
+
+f4: tan(x)$
+df4: diff(f4, x)$
+df4_simplified: ratsimp(df4)$
+print("tan(x) 的导数: ", df4_simplified)$
+
+print("")$
+
+/* 示例3：指数和对数函数导数 */
+f5: exp(x)$
+df5: diff(f5, x)$
+print("e^x 的导数: ", df5)$
+
+f6: log(x)$
+df6: diff(f6, x)$
+print("ln(x) 的导数: ", df6)$
+
+/* 注意：a 是常数 */
+f7: a^x$
+df7: diff(f7, x)$
+print("a^x 的导数: ", df7)$
+
+print("")$
+
+/* 2. 链式法则 */
+print("2. 链式法则")$
+
+/* 示例4：复合函数导数 sin(x^2) */
+f8: sin(x^2)$
+df8: diff(f8, x)$
+print("sin(x^2) 的导数: ", df8)$
+
+/* 示例5：e^(3x^2 + 1) */
+f9: exp(3*x^2 + 1)$
+df9: diff(f9, x)$
+print("e^(3x^2+1) 的导数: ", df9)$
+
+/* 示例6：ln(sqrt(1+x^2)) */
+f10: log(sqrt(1 + x^2))$
+df10: diff(f10, x)$
+df10_simplified: ratsimp(df10)$
+print("ln(sqrt(1+x^2)) 的导数: ", df10_simplified)$
+
+print("")$
+
+/* 3. 乘积法则和商法则 */
+print("3. 乘积法则和商法则")$
+
+/* 示例7：乘积法则 (x^2 * sin(x)) */
+u: x^2$
+v: sin(x)$
+f11: u * v$
+df11: diff(f11, x)$
+print("(x^2 * sin(x)) 的导数: ", df11)$
+
+/* 验证乘积法则 */
+du: diff(u, x)$
+dv: diff(v, x)$
+product_rule: du*v + u*dv$
+print("使用乘积法则验证: ", ratsimp(product_rule))$
+
+print("")$
+
+/* 示例8：商法则 (cos(x)/(1+x^2)) */
+f12: cos(x) / (1 + x^2)$
+df12: diff(f12, x)$
+df12_simplified: ratsimp(df12)$
+print("(cos(x)/(1+x^2)) 的导数: ", df12_simplified)$
+
+print("")$
+
+/* 4. 隐函数求导 */
+print("4. 隐函数求导")$
+
+/* 示例9：圆方程 x^2 + y^2 = 25 */
+depends(y, x)$
+F: x^2 + y^2 - 25$
+
+/* 对 x 求导 */
+dF_dx: diff(F, x)$
+print("圆方程: ", F, " = 0")$
+print("对 x 求导: ", dF_dx)$
+
+/* 解出 dy/dx */
+dy_dx: rhs(first(solve(dF_dx, 'diff(y, x))))$
+print("dy/dx = ", dy_dx)$
+
+/* 在点 (3, 4) 处的导数值 */
+slope: subst([x=3, y=4], dy_dx)$
+print("在点 (3,4) 处的斜率: ", slope)$
+
+print("")$
+
+/* 5. 参数方程求导 */
+print("5. 参数方程求导")$
+
+/* 示例10：参数方程 x(t) = 3t^2, y(t) = 2t^3 */
+x_param: 3*t^2$
+y_param: 2*t^3$
+
+/* 计算 dy/dx = (dy/dt)/(dx/dt) */
+dx_dt: diff(x_param, t)$
+dy_dt: diff(y_param, t)$
+dy_dx_param: dy_dt / dx_dt$
+dy_dx_param_simplified: ratsimp(dy_dx_param)$
+
+print("参数方程: x(t) = ", x_param, ", y(t) = ", y_param)$
+print("dx/dt = ", dx_dt)$
+print("dy/dt = ", dy_dt)$
+print("dy/dx = ", dy_dx_param_simplified)$
+
+/* 在 t=1 时的导数值 */
+slope_at_1: subst(t=1, dy_dx_param)$
+print("t=1 时的斜率: ", slope_at_1)$
+
+print("")$
+
+/* 6. 物理应用：运动学 */
+print("6. 物理应用：运动学")$
+
+/* 示例11：物体沿曲线运动 */
+x_pos: 3*t^2$
+y_pos: 2*t^3$
+
+/* 速度分量 */
+vx: diff(x_pos, t)$
+vy: diff(y_pos, t)$
+print("速度分量: vx = ", vx, ", vy = ", vy)$
+
+/* 速度大小 */
+v_magnitude: sqrt(vx^2 + vy^2)$
+v_at_1: subst(t=1, v_magnitude)$
+print("t=1 时速度大小: ", v_at_1, " = ", float(v_at_1))$
+
+/* 加速度分量 */
+ax: diff(vx, t)$
+ay: diff(vy, t)$
+print("加速度分量: ax = ", ax, ", ay = ", ay)$
+
+/* 加速度大小 */
+a_magnitude: sqrt(ax^2 + ay^2)$
+a_at_1: subst(t=1, a_magnitude)$
+print("t=1 时加速度大小: ", a_at_1, " = ", float(a_at_1))$
+
+print("")$
+
+/* 7. 高阶导数 */
+print("7. 高阶导数")$
+
+/* 示例12：高阶导数 */
+f13: sin(x)$
+print("f(x) = sin(x)")$
+for n:1 thru 6 do (
+    dn_f13: diff(f13, x, n),
+    printf(true, "f^(~a)(x) = ~a~%", n, dn_f13)
+)$
+
+print("")$
+
+/* 示例13：莱布尼茨公式 (乘积的高阶导数) */
+u: x^2$
+v: exp(x)$
+print("u = ", u, ", v = ", v)$
+print("乘积的高阶导数 (莱布尼茨公式):")$
+for n:1 thru 4 do (
+    dn_uv: diff(u*v, x, n),
+    dn_uv_simplified: ratsimp(dn_uv),
+    printf(true, "(uv)^(~a) = ~a~%", n, dn_uv_simplified)
+)$
+
+print("")$
+
+/* 8. 数值验证 */
+print("8. 数值验证")$
+
+/* 验证 sin(x) 在 x=0 处的导数 */
+print("验证 sin(x) 在 x=0 处的导数:")$
+x_val: 0$
+h_values: [0.1, 0.01, 0.001, 0.0001]$
+print("h值         | 差商 (f(x+h)-f(x))/h | 误差")$
+for h in h_values do (
+    numerical_derivative: (sin(x_val + h) - sin(x_val)) / h,
+    exact_derivative: cos(x_val),  /* cos(0) = 1 */
+    err_val: abs(numerical_derivative - exact_derivative),
+    printf(true, "%.4f      | %.10f           | %.2e~%", h, numerical_derivative, err_val)
+)$
+
+print("")$
+
+/* 9. 偏导数（多变量函数） */
+print("9. 偏导数（多变量函数）")$
+
+/* 示例14：多变量函数偏导数 */
+f14: x^2*y + x*y^3$
+df14_dx: diff(f14, x)$
+df14_dy: diff(f14, y)$
+print("f(x,y) = ", f14)$
+print("∂f/∂x = ", df14_dx)$
+print("∂f/∂y = ", df14_dy)$
+
+/* 混合偏导数 */
+d2f14_dxdy: diff(f14, x, y)$
+d2f14_dydx: diff(f14, y, x)$
+print("∂²f/∂x∂y = ", d2f14_dxdy)$
+print("∂²f/∂y∂x = ", d2f14_dydx)$
+print("混合偏导数相等: ", ratsimp(d2f14_dxdy - d2f14_dydx) = 0)$
+
+print("")$
+
+/* 10. 练习 */
+print("10. 练习")$
+print("尝试计算以下导数:")$
+print("1. f(x) = x^4 * e^x 的导数")$
+print("2. g(x) = ln(x + sqrt(x^2 + 1)) 的导数")$
+print("3. h(x) = sin(x) * cos(2x) 的二阶导数")$
+print("4. 隐函数 x^2 + xy + y^2 = 1 的 dy/dx")$
+print("")$
+
+print("=== 导数计算示例结束 ===")$

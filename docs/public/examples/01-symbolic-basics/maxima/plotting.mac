@@ -1,0 +1,185 @@
+/* Function Plotting Examples for Maxima */
+/* Applicable to Maxima */
+/* This file demonstrates symbolic calculation plotting of various functions */
+/* Author: CAS Learn Tutorial */
+/* Date: 2026-06-05 */
+
+/* 1. Basic Function Plotting */
+printf(true, "=== Basic Function Plotting ===~%");
+
+/* Define basic functions */
+f1(x) := x^2;
+f2(x) := x^3;
+f3(x) := sin(x);
+f4(x) := exp(x);
+
+/* Plot quadratic function */
+plot2d(x^2, [x, -3, 3], [title, "Quadratic f(x) = x^2"],
+    [xlabel, "x"], [ylabel, "f(x)"])$
+
+/* Plot cubic function */
+plot2d(x^3, [x, -2, 2], [title, "Cubic f(x) = x^3"],
+    [xlabel, "x"], [ylabel, "f(x)"])$
+
+/* Plot sine function */
+plot2d(sin(x), [x, -2*%pi, 2*%pi], [title, "Sine f(x) = sin(x)"],
+    [xlabel, "x"], [ylabel, "f(x)"])$
+
+/* Plot exponential function */
+plot2d(exp(x), [x, -2, 2], [title, "Exponential f(x) = e^x"],
+    [xlabel, "x"], [ylabel, "f(x)"])$
+
+/* 2. Multi-function comparison */
+printf(true, "~%=== Multi-function Comparison ===~%");
+
+/* Define multiple functions */
+f_exp(x) := exp(x);
+f_sin(x) := sin(x);
+f_cos(x) := cos(x);
+f_lin(x) := x;
+
+/* Plot comparison */
+plot2d([exp(x), sin(x), cos(x), x], [x, -2, 2],
+    [title, "Multi-function Comparison"],
+    [xlabel, "x"], [ylabel, "f(x)"],
+    [legend, "e^x", "sin(x)", "cos(x)", "x"])$
+
+/* 3. Parametric equations */
+printf(true, "~%=== Parametric Equations ===~%");
+
+/* Circle: x = cos(t), y = sin(t) */
+plot2d([parametric, cos(t), sin(t), [t, 0, 2*%pi]],
+    [title, "Circle: x=cos(t), y=sin(t)"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Ellipse: x = 3*cos(t), y = 2*sin(t) */
+plot2d([parametric, 3*cos(t), 2*sin(t), [t, 0, 2*%pi]],
+    [title, "Ellipse: x=3cos(t), y=2sin(t)"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Archimedean spiral */
+plot2d([parametric, t*cos(t), t*sin(t), [t, 0, 6*%pi]],
+    [title, "Archimedean Spiral"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Heart curve */
+plot2d([parametric, 16*sin(t)^3,
+    13*cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t),
+    [t, 0, 2*%pi]],
+    [title, "Heart Curve"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* 4. Conic sections as parametric equations */
+printf(true, "~%=== Conic Sections ===~%");
+
+/* Circle: x^2 + y^2 = 4 -> x=2cos(t), y=2sin(t) */
+plot2d([parametric, 2*cos(t), 2*sin(t), [t, 0, 2*%pi]],
+    [title, "Circle: x^2 + y^2 = 4"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Ellipse: x^2/4 + y^2/9 = 1 -> x=2cos(t), y=3sin(t) */
+plot2d([parametric, 2*cos(t), 3*sin(t), [t, 0, 2*%pi]],
+    [title, "Ellipse: x^2/4 + y^2/9 = 1"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Hyperbola branch: x=cosh(t), y=sinh(t) */
+plot2d([parametric, cosh(t), sinh(t), [t, -2, 2]],
+    [title, "Hyperbola branch: x=cosh(t), y=sinh(t)"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Parabola: x=t, y=t^2 */
+plot2d([parametric, t, t^2, [t, -3, 3]],
+    [title, "Parabola: y = x^2"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* 5. 3D surfaces */
+printf(true, "~%=== 3D Surfaces ===~%");
+
+/* Saddle surface: z = x^2 - y^2 */
+plot3d(x^2 - y^2, [x, -2, 2], [y, -2, 2],
+    [title, "Saddle: z = x^2 - y^2"],
+    [xlabel, "x"], [ylabel, "y"], [zlabel, "z"])$
+
+/* Sine surface: z = sin(x)*cos(y) */
+plot3d(sin(x)*cos(y), [x, -2*%pi, 2*%pi], [y, -2*%pi, 2*%pi],
+    [title, "Sine Surface: z=sin(x)*cos(y)"],
+    [xlabel, "x"], [ylabel, "y"], [zlabel, "z"])$
+
+/* Gaussian: z = exp(-(x^2 + y^2)) */
+plot3d(exp(-(x^2 + y^2)), [x, -2, 2], [y, -2, 2],
+    [title, "Gaussian: z = e^{-(x^2+y^2)}"],
+    [xlabel, "x"], [ylabel, "y"], [zlabel, "z"])$
+
+/* Paraboloid: z = x^2 + y^2 */
+plot3d(x^2 + y^2, [x, -2, 2], [y, -2, 2],
+    [title, "Paraboloid: z = x^2 + y^2"],
+    [xlabel, "x"], [ylabel, "y"], [zlabel, "z"])$
+
+/* 6. Physics: Wave equation */
+printf(true, "~%=== Physics: Wave Equation ===~%");
+
+/* Define wave function */
+wave(x, t) := 2*sin(2*x - 3*t);
+
+/* Plot wave at different times */
+plot2d(2*sin(2*x), [x, 0, 4*%pi],
+    [title, "Wave at t = 0"],
+    [xlabel, "x"], [ylabel, "y"],
+    [y, -2.5, 2.5])$
+
+plot2d(2*sin(2*x - 3*%pi/6), [x, 0, 4*%pi],
+    [title, "Wave at t = pi/6"],
+    [xlabel, "x"], [ylabel, "y"],
+    [y, -2.5, 2.5])$
+
+plot2d(2*sin(2*x - 3*%pi/3), [x, 0, 4*%pi],
+    [title, "Wave at t = pi/3"],
+    [xlabel, "x"], [ylabel, "y"],
+    [y, -2.5, 2.5])$
+
+plot2d(2*sin(2*x - 3*%pi/2), [x, 0, 4*%pi],
+    [title, "Wave at t = pi/2"],
+    [xlabel, "x"], [ylabel, "y"],
+    [y, -2.5, 2.5])$
+
+/* 7. Engineering: Frequency response */
+printf(true, "~%=== Engineering: Frequency Response ===~%");
+
+/* Define frequency response function */
+H(omega) := 1 / sqrt((1 - (omega/omega_n)^2)^2 + (2*zeta*omega/omega_n)^2);
+
+/* Set parameters */
+omega_n_val: 1;
+zeta_values: [0.1, 0.3, 0.5, 0.7, 1.0];
+
+/* Plot frequency response curves */
+for zeta_val in zeta_values do block(
+    title_str: sconcat("Freq Response (zeta=", zeta_val, ")"),
+    plot2d(subst([omega_n=omega_n_val, zeta=zeta_val], H(omega)),
+        [omega, 0, 3],
+        [title, title_str],
+        [xlabel, "omega/omega_n"], [ylabel, "|H(omega)|"],
+        [y, 0, 5])
+)$
+
+/* 8. Polar coordinates */
+printf(true, "~%=== Polar Coordinates ===~%");
+
+/* Rose curve: r = cos(3*theta) */
+plot2d([parametric, cos(3*t)*cos(t), cos(3*t)*sin(t), [t, 0, 2*%pi]],
+    [title, "Rose Curve: r = cos(3*theta)"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* Cardioid: r = 1 - cos(theta) */
+plot2d([parametric, (1-cos(t))*cos(t), (1-cos(t))*sin(t), [t, 0, 2*%pi]],
+    [title, "Cardioid: r = 1 - cos(theta)"],
+    [xlabel, "x"], [ylabel, "y"])$
+
+/* 9. Vector field (using plotdf) */
+printf(true, "~%=== Vector Field ===~%");
+
+/* Simple vector field: F = (y, -x) */
+/* load(plotdf); */
+/* plotdf([y, -x], [x, -2, 2], [y, -2, 2]); */
+
+printf(true, "~%Function plotting examples completed!~%");

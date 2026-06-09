@@ -1,0 +1,357 @@
+/* ========================================================================= */
+/* Functional Extremum - Maxima Implementation                               */
+/* ========================================================================= */
+/* 本文件演示泛函极值的判定和求解方法                                        */
+/* 包括：二阶变分、Legendre条件、Jacobi场、等周问题、约束变分                */
+/* ========================================================================= */
+
+/* 清除工作空间 */
+kill(all)$
+reset()$
+
+/* 关闭二维显示以简化输出 */
+display2d: false$
+
+printf(true, "============================================================~%")$
+printf(true, "          Functional Extremum - 泛函极值                     ~%")$
+printf(true, "============================================================~%~%")$
+
+/* ========================================================================= */
+/* 1. 二阶变分和极值判定                                                     */
+/* ========================================================================= */
+/* 对于泛函 J[y] = ∫_a^b F(x, y, y') dx                                    */
+/* 一阶变分: δJ = ∫ [F_y - d/dx(F_{y'})] η dx                              */
+/* 二阶变分: δ²J = ∫ [F_{yy}η² + 2F_{yy'}ηη' + F_{y'y'}η'²] dx            */
+/* 极小值条件: δ²J > 0 对所有非零 η 成立                                    */
+
+depends(y, x)$
+declare(C1, constant)$
+declare(C2, constant)$
+
+printf(true, "1. 二阶变分和极值判定~%")$
+printf(true, "======================================================~%")$
+printf(true, "   泛函: J[y] = integral_a^b F(x, y, y') dx~%")$
+printf(true, "   二阶变分:~%")$
+printf(true, "   delta^2 J = integral [F_{yy}*eta^2~%")$
+printf(true, "             + 2*F_{yy'}*eta*eta'~%")$
+printf(true, "             + F_{y'y'}*eta'^2] dx~%~%")$
+
+/* 示例: F = y'^2 + y^2 */
+printf(true, "   示例: F = y'^2 + y^2~%~%")$
+
+F1: diff(y(x), x)^2 + y(x)^2$
+
+/* 计算二阶偏导数 */
+F1_yy: diff(F1, y(x), 2)$
+F1_yyp: diff(diff(F1, y(x)), diff(y(x), x))$
+F1_ypyp: diff(F1, diff(y(x), x), 2)$
+
+printf(true, "   F_{yy} = ~a~%", F1_yy)$
+printf(true, "   F_{yy'} = ~a~%", F1_yyp)$
+printf(true, "   F_{y'y'} = ~a~%~%", F1_ypyp)$
+
+/* 二阶变分 */
+printf(true, "   二阶变分:~%")$
+printf(true, "   delta^2 J = integral [2*eta^2 + 2*eta'^2] dx~%")$
+printf(true, "   由于 2 > 0 且 eta^2 >= 0, eta'^2 >= 0~%")$
+printf(true, "   delta^2 J > 0 对所有非零 eta~%")$
+printf(true, "   结论: 存在极小值~%~%")$
+
+/* 示例: F = y'^2 - y^2 */
+printf(true, "   示例: F = y'^2 - y^2~%~%")$
+
+F2: diff(y(x), x)^2 - y(x)^2$
+F2_yy: diff(F2, y(x), 2)$
+F2_yyp: diff(diff(F2, y(x)), diff(y(x), x))$
+F2_ypyp: diff(F2, diff(y(x), x), 2)$
+
+printf(true, "   F_{yy} = ~a~%", F2_yy)$
+printf(true, "   F_{yy'} = ~a~%", F2_yyp)$
+printf(true, "   F_{y'y'} = ~a~%~%", F2_ypyp)$
+
+printf(true, "   二阶变分:~%")$
+printf(true, "   delta^2 J = integral [-2*eta^2 + 2*eta'^2] dx~%")$
+printf(true, "   符号不确定，需要更细致的分析~%")$
+printf(true, "   (见Jacobi条件部分)~%~%")$
+
+/* ========================================================================= */
+/* 2. 充分条件: Legendre条件                                                 */
+/* ========================================================================= */
+/* Legendre条件: F_{y'y'} >= 0 是极小值的必要条件                            */
+/* 强Legendre条件: F_{y'y'} > 0 是严格极小值的必要条件                       */
+/* 与Jacobi条件结合构成充分条件                                              */
+
+printf(true, "============================================================~%")$
+printf(true, "2. 充分条件: Legendre条件~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Legendre条件: F_{y'y'} >= 0 (极小值的必要条件)~%")$
+printf(true, "   强Legendre条件: F_{y'y'} > 0~%~%")$
+
+/* 检验多个例子 */
+printf(true, "   --- 检验多个F的Legendre条件 ---~%~%")$
+
+/* 例1: F = y'^2 + y^2 */
+F_ex1: diff(y(x), x)^2 + y(x)^2$
+F_ex1_ypyp: diff(F_ex1, diff(y(x), x), 2)$
+printf(true, "   F = y'^2 + y^2~%")$
+printf(true, "   F_{y'y'} = ~a~%", F_ex1_ypyp)$
+printf(true, "   满足强Legendre条件 (极小值)~%~%")$
+
+/* 例2: F = y'^3 */
+F_ex2: diff(y(x), x)^3$
+F_ex2_ypyp: diff(F_ex2, diff(y(x), x), 2)$
+printf(true, "   F = y'^3~%")$
+printf(true, "   F_{y'y'} = ~a~%", F_ex2_ypyp)$
+printf(true, "   符号取决于y'，Legendre条件不一定满足~%~%")$
+
+/* 例3: F = sqrt(1+y'^2) */
+F_ex3: sqrt(1 + diff(y(x), x)^2)$
+F_ex3_ypyp: ratsimp(diff(F_ex3, diff(y(x), x), 2))$
+printf(true, "   F = sqrt(1+y'^2)~%")$
+printf(true, "   F_{y'y'} = ~a~%", F_ex3_ypyp)$
+printf(true, "   由于 1+y'^2 > 0，F_{y'y'} > 0~%")$
+printf(true, "   满足强Legendre条件 (弧长泛函有极小值)~%~%")$
+
+/* 例4: F = -y'^2 */
+F_ex4: -diff(y(x), x)^2$
+F_ex4_ypyp: diff(F_ex4, diff(y(x), x), 2)$
+printf(true, "   F = -y'^2~%")$
+printf(true, "   F_{y'y'} = ~a~%", F_ex4_ypyp)$
+printf(true, "   不满足Legendre条件 (无极小值，可能有极大值)~%~%")$
+
+/* ========================================================================= */
+/* 3. Jacobi场和共轭点                                                       */
+/* ========================================================================= */
+/* Jacobi方程 (沿极值曲线 y0):                                               */
+/* d/dx[(F_{yy'} + F_{y'y'}*y0'')*h + F_{y'y'}*h']                          */
+/*   - [F_{yy} + F_{yy'}*y0'']*h = 0                                        */
+/* 其中 h 是Jacobi场，h(a)=0                                                */
+/* 共轭点: h(b)=0 的点 b                                                    */
+/* 无共轭点 => 强极值存在                                                    */
+
+printf(true, "============================================================~%")$
+printf(true, "3. Jacobi场和共轭点~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Jacobi方程: 沿极值曲线的线性化方程~%")$
+printf(true, "   共轭点: Jacobi场的零点~%")$
+printf(true, "   无共轭点 => 强极值存在~%~%")$
+
+/* 简化情况: F = P(x)*y'^2 + Q(x)*y^2 */
+/* 此时Jacobi方程简化为: -(P*h')' + Q*h = 0 */
+
+printf(true, "   简化情况: F = P(x)*y'^2 + Q(x)*y^2~%")$
+printf(true, "   Jacobi方程: -(P*h')' + Q*h = 0~%~%")$
+
+/* 示例: F = y'^2 + y^2, 即 P=1, Q=1 */
+/* Jacobi方程: -h'' + h = 0 */
+/* 解: h = A*exp(x) + B*exp(-x) 或 h = C*sinh(x) */
+
+printf(true, "   示例: F = y'^2 + y^2 (P=1, Q=1)~%")$
+printf(true, "   Jacobi方程: -h'' + h = 0~%")$
+printf(true, "   即: h'' - h = 0~%~%")$
+
+/* 求解Jacobi方程 */
+h_jac_sol: ode2('diff(h(x), x, 2) - h(x) = 0, h(x), x)$
+printf(true, "   通解: ~a~%", h_jac_sol)$
+printf(true, "   即: h(x) = C1*exp(x) + C2*exp(-x)~%~%")$
+
+/* 边界条件 h(0)=0 => C1+C2=0 => C2=-C1 */
+printf(true, "   边界条件 h(0) = 0:~%")$
+printf(true, "   C1 + C2 = 0 => C2 = -C1~%")$
+printf(true, "   h(x) = C1*(exp(x) - exp(-x)) = 2*C1*sinh(x)~%~%")$
+
+/* 共轭点: h(x_c) = 0 */
+printf(true, "   共轭点条件 h(x_c) = 0:~%")$
+printf(true, "   sinh(x_c) = 0 => x_c = 0~%")$
+printf(true, "   在区间 (0, b) 内无共轭点 (当 b < infinity)~%")$
+printf(true, "   因此对于任意有限区间，存在强极小值~%~%")$
+
+/* 示例: F = y'^2 - y^2, 即 P=1, Q=-1 */
+/* Jacobi方程: -h'' - h = 0 => h'' + h = 0 */
+/* 解: h = A*sin(x) + B*cos(x) */
+
+printf(true, "   示例: F = y'^2 - y^2 (P=1, Q=-1)~%")$
+printf(true, "   Jacobi方程: -h'' - h = 0 => h'' + h = 0~%~%")$
+
+h_jac_sol2: ode2('diff(h(x), x, 2) + h(x) = 0, h(x), x)$
+printf(true, "   通解: ~a~%", h_jac_sol2)$
+printf(true, "   即: h(x) = C1*sin(x) + C2*cos(x)~%~%")$
+
+/* 边界条件 h(0)=0 => C2=0 => h=C1*sin(x) */
+printf(true, "   边界条件 h(0) = 0:~%")$
+printf(true, "   C2 = 0 => h(x) = C1*sin(x)~%~%")$
+
+/* 共轭点: sin(x_c) = 0 => x_c = n*pi */
+printf(true, "   共轭点条件 h(x_c) = 0:~%")$
+printf(true, "   sin(x_c) = 0 => x_c = n*pi (n=1,2,3,...)~%~%")$
+
+printf(true, "   结论:~%")$
+printf(true, "   - 区间 [0, b] 当 b < pi 时无共轭点，存在强极小值~%")$
+printf(true, "   - 区间 [0, b] 当 b > pi 时有共轭点，极值性质需进一步分析~%~%")$
+
+/* ========================================================================= */
+/* 4. 等周问题的Lagrange乘子法                                               */
+/* ========================================================================= */
+/* 等周问题: 在约束 integral G(x,y,y')dx = L 下求 J[y] = integral F dx 的极值 */
+/* 引入Lagrange乘子 lambda: 求解 E-L(F + lambda*G) = 0                       */
+
+printf(true, "============================================================~%")$
+printf(true, "4. 等周问题的Lagrange乘子法~%")$
+printf(true, "============================================================~%")$
+printf(true, "   问题: 在约束 integral G dx = L 下求 J = integral F dx 极值~%")$
+printf(true, "   方法: 引入乘子 lambda, 求解 E-L(F + lambda*G) = 0~%~%")$
+
+declare(lambda, constant)$
+
+/* 示例: 固定弧长下求最大面积 */
+/* 目标: A = integral y dx */
+/* 约束: integral sqrt(1+y'^2) dx = L */
+
+printf(true, "   示例: 固定弧长下求最大面积~%")$
+printf(true, "   目标: A = integral y dx~%")$
+printf(true, "   约束: integral sqrt(1+y'^2) dx = L~%~%")$
+
+F_iso: y(x)$
+G_iso: sqrt(1 + diff(y(x), x)^2)$
+L_lagr: F_iso + lambda * G_iso$
+
+L_lagr_y: diff(L_lagr, y(x))$
+L_lagr_yp: diff(L_lagr, diff(y(x), x))$
+
+printf(true, "   Lagrange函数: L = y + lambda*sqrt(1+y'^2)~%")$
+printf(true, "   dL/dy = ~a~%", L_lagr_y)$
+printf(true, "   dL/dy' = ~a~%", ratsimp(L_lagr_yp))$
+printf(true, "~%")$
+
+/* 使用Beltrami恒等式 (L不显含x) */
+Beltrami_iso: ratsimp(L_lagr - diff(y(x), x) * L_lagr_yp)$
+printf(true, "   Beltrami恒等式 (L不显含x):~%")$
+printf(true, "   L - y'*dL/dy' = ~a = C~%", Beltrami_iso)$
+printf(true, "~%")$
+
+/* 化简: lambda/sqrt(1+y'^2) = C - y = K */
+printf(true, "   化简: lambda / sqrt(1+y'^2) = K - y~%")$
+printf(true, "   其中 K = C 是常数~%~%")$
+
+/* 平方: lambda^2 / (1+y'^2) = (K-y)^2 */
+/* y'^2 = lambda^2/(K-y)^2 - 1 */
+/* dy/dx = sqrt(lambda^2 - (K-y)^2) / (K-y) */
+
+printf(true, "   平方并化简:~%")$
+printf(true, "   y'^2 = lambda^2/(K-y)^2 - 1~%")$
+printf(true, "   dy/dx = sqrt(lambda^2 - (K-y)^2) / (K-y)~%~%")$
+
+/* 令 K-y = lambda*cos(theta) */
+/* dy = lambda*sin(theta)*dtheta */
+/* dx = (K-y)*dy/sqrt(lambda^2-(K-y)^2) = lambda*cos(theta)*lambda*sin(theta)*dtheta / (lambda*sin(theta)) */
+/* dx = lambda*cos(theta)*dtheta */
+/* 积分: x = lambda*sin(theta) + x0 */
+
+printf(true, "   参数化: 令 K-y = lambda*cos(theta)~%")$
+printf(true, "   x - x0 = lambda*sin(theta)~%")$
+printf(true, "   K - y = lambda*cos(theta)~%~%")$
+
+printf(true, "   消去 theta:~%")$
+printf(true, "   (x-x0)^2 + (K-y)^2 = lambda^2~%")$
+printf(true, "   解是圆弧! (等周问题的经典结论)~%~%")$
+
+/* ========================================================================= */
+/* 5. 约束变分问题                                                           */
+/* ========================================================================= */
+/* 约束变分: 在满足微分方程约束的函数中求泛函极值                            */
+/* 使用Lagrange乘子函数 (非恒定乘子)                                         */
+
+printf(true, "============================================================~%")$
+printf(true, "5. 约束变分问题~%")$
+printf(true, "============================================================~%")$
+printf(true, "   约束变分: 在满足微分约束的函数中求泛函极值~%")$
+printf(true, "   使用Lagrange乘子函数 lambda(x)~%~%")$
+
+/* 示例: 最短路径问题 (约束在曲面上) */
+/* 目标: 最小化 integral sqrt(x'^2+y'^2+z'^2) dt */
+/* 约束: g(x,y,z) = 0 (曲面方程) */
+
+printf(true, "   示例: 曲面上的最短路径~%")$
+printf(true, "   目标: 最小化 integral sqrt(x'^2+y'^2+z'^2) dt~%")$
+printf(true, "   约束: g(x,y,z) = 0~%~%")$
+
+/* 构造增广泛函 */
+/* J* = integral [sqrt(x'^2+y'^2+z'^2) + lambda(t)*g(x,y,z)] dt */
+
+printf(true, "   增广泛函:~%")$
+printf(true, "   J* = integral [sqrt(x'^2+y'^2+z'^2) + lambda(t)*g(x,y,z)] dt~%~%")$
+
+/* E-L方程组 */
+printf(true, "   E-L方程组:~%")$
+printf(true, "   d/dt(x'/s) = lambda * dg/dx~%")$
+printf(true, "   d/dt(y'/s) = lambda * dg/dy~%")$
+printf(true, "   d/dt(z'/s) = lambda * dg/dz~%")$
+printf(true, "   其中 s = sqrt(x'^2+y'^2+z'^2)~%~%")$
+
+/* 特例: 球面上的测地线 */
+/* 约束: x^2 + y^2 + z^2 = R^2 */
+printf(true, "   特例: 球面 x^2+y^2+z^2=R^2 上的测地线~%")$
+printf(true, "   dg/dx = 2x, dg/dy = 2y, dg/dz = 2z~%~%")$
+
+/* 球坐标: x=R*sin(theta)*cos(phi), y=R*sin(theta)*sin(phi), z=R*cos(theta) */
+printf(true, "   使用球坐标:~%")$
+printf(true, "   x = R*sin(theta)*cos(phi)~%")$
+printf(true, "   y = R*sin(theta)*sin(phi)~%")$
+printf(true, "   z = R*cos(theta)~%~%")$
+
+/* 弧长元素: ds^2 = R^2*(dtheta^2 + sin^2(theta)*dphi^2) */
+printf(true, "   弧长元素: ds^2 = R^2*(dtheta^2 + sin^2(theta)*dphi^2)~%")$
+printf(true, "   被积函数: F = R*sqrt(theta'^2 + sin^2(theta)*phi'^2)~%~%")$
+
+/* 由于F不显含phi (循环坐标)，有守恒量 */
+printf(true, "   F不显含phi (循环坐标):~%")$
+printf(true, "   dF/dphi' = R*sin^2(theta)*phi'/sqrt(...) = const~%")$
+printf(true, "   这对应于角动量守恒~%~%")$
+
+/* 测地线是大圆 */
+printf(true, "   解: 球面上的测地线是大圆~%")$
+printf(true, "   (过球心的平面与球面的交线)~%~%")$
+
+/* ========================================================================= */
+/* 6. Weierstrass条件和强极值                                                */
+/* ========================================================================= */
+/* Weierstrass E-条件: E(x, y, y', w) >= 0 对所有 w                         */
+/* 其中 E = F(x,y,w) - F(x,y,y') - (w-y')*F_{y'}(x,y,y')                   */
+/* 满足时 y 是强极小值                                                       */
+
+printf(true, "============================================================~%")$
+printf(true, "6. Weierstrass E-条件~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Weierstrass超额函数:~%")$
+printf(true, "   E(x,y,y',w) = F(x,y,w) - F(x,y,y') - (w-y')*F_{y'}(x,y,y')~%")$
+printf(true, "   E >= 0 对所有 w => 强极小值~%~%")$
+
+/* 示例: F = y'^2 + y^2 */
+printf(true, "   示例: F = y'^2 + y^2~%~%")$
+
+/* F(y') = y'^2 (取y固定) */
+/* E = w^2 - y'^2 - (w-y')*2*y' = w^2 - y'^2 - 2wy' + 2y'^2 */
+/*   = w^2 - 2wy' + y'^2 = (w-y')^2 >= 0 */
+
+printf(true, "   F(w) = w^2, F(y') = y'^2, F_{y'} = 2*y'~%")$
+printf(true, "   E = w^2 - y'^2 - (w-y')*2*y'~%")$
+printf(true, "     = w^2 - 2*w*y' + y'^2~%")$
+printf(true, "     = (w - y')^2 >= 0~%")$
+printf(true, "   E >= 0 对所有 w，满足Weierstrass条件~%")$
+printf(true, "   结论: 存在强极小值~%~%")$
+
+/* ========================================================================= */
+/* 总结                                                                       */
+/* ========================================================================= */
+printf(true, "============================================================~%")$
+printf(true, "                         总结~%")$
+printf(true, "============================================================~%")$
+printf(true, "1. 二阶变分 delta^2 J > 0 是极小值的条件~%")$
+printf(true, "2. Legendre条件: F_{y'y'} >= 0 (必要条件)~%")$
+printf(true, "3. Jacobi条件: 无共轭点 (充分条件的一部分)~%")$
+printf(true, "4. Legendre + Jacobi 条件 => 充分条件~%")$
+printf(true, "5. 等周问题用Lagrange乘子法~%")$
+printf(true, "6. 约束变分用乘子函数法~%")$
+printf(true, "7. Weierstrass E-条件判断强极值~%~%")$
+
+printf(true, "Done.~%")$

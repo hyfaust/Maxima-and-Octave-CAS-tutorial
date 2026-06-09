@@ -1,0 +1,314 @@
+/* 第3章：线性代数 - 矩阵分解 */
+/* 本文件演示如何在Maxima中进行矩阵分解 */
+/* 包括：LU分解、QR分解、Cholesky分解、特征分解等 */
+
+display("=== 矩阵分解示例 ===")$
+
+/* 1. LU 分解 */
+display("--- 1. LU 分解 ---")$
+
+/* 定义矩阵 */
+A: matrix([2, 1, 1], [4, 3, 3], [8, 7, 9])$
+display("矩阵 A:")$
+display(A)$
+
+/* LU 分解 */
+lu_result: lu_factor(A)$
+lu_combined: lu_result[1]$
+lu_perm: lu_result[2]$
+n_A: length(A)$
+
+/* 从合并格式提取 L 和 U */
+U: genmatrix(lambda([i,j], if j>=i then lu_combined[i][j] else 0), n_A, n_A)$
+L: ident(n_A) + genmatrix(lambda([i,j], if j<i then lu_combined[i][j] else 0), n_A, n_A)$
+
+/* 应用行置换构建置换矩阵 P */
+P: genmatrix(lambda([i,j], if j=lu_perm[i] then 1 else 0), n_A, n_A)$
+
+display("下三角矩阵 L:")$
+display(L)$
+display("上三角矩阵 U:")$
+display(U)$
+display("置换矩阵 P:")$
+display(P)$
+
+/* 验证 P*A = L*U */
+check_lu: ratsimp(L . U)$
+check_PA: ratsimp(P . A)$
+display("验证 P*A = L*U:")$
+display("P*A =", check_PA)$
+display("L*U =", check_lu)$
+
+/* 使用逆矩阵法求解线性方程组 */
+b: matrix([1], [2], [3])$
+display("右端向量 b:")$
+display(b)$
+x_lu: ratsimp(A^^(-1) . b)$
+display("解 x = A^(-1)*b:")$
+display(x_lu)$
+display("验证 A*x =", ratsimp(A . x_lu))$
+
+/* 2. QR 分解（使用 Gram-Schmidt 过程） */
+display("--- 2. QR 分解 ---")$
+
+/* 定义矩阵 */
+B: matrix([1, 1, 0], [1, 0, 1], [0, 1, 1])$
+display("矩阵 B:")$
+display(B)$
+
+/* Gram-Schmidt 正交化过程 */
+/* 提取列向量 */
+a1: transpose(matrix([1, 1, 0]))$
+a2: transpose(matrix([1, 0, 1]))$
+a3: transpose(matrix([0, 1, 1]))$
+
+/* 第一个向量 */
+u1: a1$
+norm_u1: sqrt(transpose(u1) . u1)$
+e1: ratsimp(u1 / norm_u1)$
+
+/* 第二个向量 */
+proj2: (transpose(e1) . a2) * e1$
+u2: ratsimp(a2 - proj2)$
+norm_u2: sqrt(transpose(u2) . u2)$
+e2: ratsimp(u2 / norm_u2)$
+
+/* 第三个向量 */
+proj3_1: (transpose(e1) . a3) * e1$
+proj3_2: (transpose(e2) . a3) * e2$
+u3: ratsimp(a3 - proj3_1 - proj3_2)$
+norm_u3: sqrt(transpose(u3) . u3)$
+e3: ratsimp(u3 / norm_u3)$
+
+/* 构建 Q 和 R */
+Q: ratsimp(transpose(addcol(e1, e2, e3)))$
+R: ratsimp(transpose(Q) . B)$
+
+display("正交矩阵 Q:")$
+display(Q)$
+display("上三角矩阵 R:")$
+display(R)$
+
+/* 验证 B = Q * R */
+check_qr: ratsimp(Q . R)$
+display("验证 Q*R = B:")$
+display(check_qr)$
+
+/* 验证 Q 的正交性 */
+display("验证 Q^T*Q = I:")$
+display(ratsimp(transpose(Q) . Q))$
+
+/* 3. Cholesky 分解 */
+display("--- 3. Cholesky 分解 ---")$
+
+/* Cholesky 分解要求矩阵是对称正定的 */
+D: matrix([4, 2, 1], [2, 5, 3], [1, 3, 6])$
+display("对称正定矩阵 D:")$
+display(D)$
+
+/* 检查是否正定 */
+eigenvalues_D: eigenvalues(D)$
+display("特征值:", eigenvalues_D)$
+
+/* Cholesky 分解: D = L * L^T */
+/* 手动实现 Cholesky 分解 */
+n: 3$
+L_chol: zeromatrix(n, n)$
+
+for i:1 thru n do (
+  for j:1 thru i do (
+    if i = j then (
+      sum: 0,
+      for k:1 thru j-1 do sum: sum + L_chol[i][k]^2,
+      L_chol[i][j]: sqrt(D[i][j] - sum)
+    ) else (
+      sum: 0,
+      for k:1 thru j-1 do sum: sum + L_chol[i][k]*L_chol[j][k],
+      L_chol[i][j]: (D[i][j] - sum) / L_chol[j][j]
+    )
+  )
+)$
+
+L_chol: ratsimp(L_chol)$
+display("Cholesky 因子 L (下三角):")$
+display(L_chol)$
+
+/* 验证 D = L * L^T */
+check_chol: ratsimp(L_chol . transpose(L_chol))$
+display("验证 L*L^T = D:")$
+display(check_chol)$
+
+/* 4. 特征分解（谱分解） */
+display("--- 4. 特征分解（谱分解）---")$
+
+/* 对称矩阵可以进行特征分解 */
+E: matrix([4, 2], [2, 3])$
+display("对称矩阵 E:")$
+display(E)$
+
+/* 特征分解 */
+eig_E: eigenvectors(E)$
+eigenvalues_E: eig_E[1][1]$
+eigenvectors_E: eig_E[2]$
+
+display("特征值:", eigenvalues_E)$
+display("特征向量:", eigenvectors_E)$
+
+/* 构建对角矩阵和特征向量矩阵 */
+n_eig_E: length(eigenvalues_E)$
+D_E: genmatrix(lambda([i,j], if i=j then eigenvalues_E[i] else 0), n_eig_E, n_eig_E)$
+V_E: transpose(matrix(eigenvectors_E[1][1], eigenvectors_E[2][1]))$
+
+/* 谱分解: E = V * D * V^T */
+E_spectral: ratsimp(V_E . D_E . transpose(V_E))$
+display("验证 V*D*V^T = E:")$
+display(E_spectral)$
+
+/* 5. 矩阵函数（使用特征分解） */
+display("--- 5. 矩阵函数 ---")$
+
+/* 计算矩阵平方根 E^(0.5) */
+/* f(A) = V * f(D) * V^T */
+sqrt_eigs: map(sqrt, eigenvalues_E)$
+D_sqrt: genmatrix(lambda([i,j], if i=j then sqrt_eigs[i] else 0), n_eig_E, n_eig_E)$
+E_sqrt: ratsimp(V_E . D_sqrt . transpose(V_E))$
+display("E^(0.5) (矩阵平方根):")$
+display(E_sqrt)$
+
+/* 验证 (E^0.5)^2 = E */
+check_sqrt: ratsimp(E_sqrt . E_sqrt)$
+display("验证 (E^0.5)^2 = E:")$
+display(check_sqrt)$
+
+/* 6. 奇异值分解（概念） */
+display("--- 6. 奇异值分解（SVD 概念）---")$
+
+/* SVD 分解: A = U * Sigma * V^T */
+/* 对于数值矩阵，SVD 通常用数值方法计算 */
+
+/* 计算 A^T * A 用于右奇异向量 */
+ATA: transpose(B) . B$
+display("B^T * B:")$
+display(ATA)$
+
+/* 特征值（奇异值的平方） */
+eig_ATA: eigenvalues(ATA)$
+singular_values: map(sqrt, eig_ATA[1])$
+display("奇异值:", singular_values)$
+
+/* 7. Jordan 标准形（概念） */
+display("--- 7. Jordan 标准形（概念）---")$
+
+/* 不可对角化矩阵 */
+F: matrix([2, 1], [0, 2])$
+display("不可对角化矩阵 F:")$
+display(F)$
+
+/* 特征值 */
+eig_F: eigenvalues(F)$
+display("特征值:", eig_F)$
+
+/* 特征向量 */
+eig_F_vec: eigenvectors(F)$
+display("特征向量:", eig_F_vec)$
+display("只有一个线性无关的特征向量，不可对角化")$
+
+/* 8. 物理应用：主成分分析 (PCA) 概念 */
+display("--- 8. 物理应用：主成分分析 (PCA) 概念 ---")$
+
+/* 创建协方差矩阵 */
+cov_matrix: matrix([1.0, 0.8], [0.8, 1.0])$
+display("协方差矩阵:")$
+display(cov_matrix)$
+
+/* 特征分解 */
+eig_cov: eigenvectors(cov_matrix)$
+eigenvalues_cov: eig_cov[1][1]$
+eigenvectors_cov: eig_cov[2]$
+
+display("特征值（方差解释量）:", eigenvalues_cov)$
+display("主成分方向（特征向量）:", eigenvectors_cov)$
+
+/* 方差解释比例 */
+total_var: apply("+", eigenvalues_cov)$
+var_ratio: map(lambda([x], x/total_var), eigenvalues_cov)$
+display("方差解释比例:", var_ratio)$
+
+/* 9. 矩阵分解的应用比较 */
+display("--- 9. 矩阵分解的应用比较 ---")$
+
+/* 创建测试矩阵 */
+G: matrix([1, 2, 3], [4, 5, 6], [7, 8, 10])$
+b_test: matrix([1], [2], [3])$
+
+display("测试矩阵 G:")$
+display(G)$
+display("右端向量 b:")$
+display(b_test)$
+
+/* 方法1: 直接求解 */
+x_direct: invert(G) . b_test$
+x_direct: ratsimp(x_direct)$
+display("直接法解:")$
+display(x_direct)$
+
+/* 方法2: LU 分解 */
+lu_G: lu_factor(G)$
+lu_G_combined: lu_G[1]$
+lu_G_perm: lu_G[2]$
+n_G: length(G)$
+U_G: genmatrix(lambda([i,j], if j>=i then lu_G_combined[i][j] else 0), n_G, n_G)$
+L_G: ident(n_G) + genmatrix(lambda([i,j], if j<i then lu_G_combined[i][j] else 0), n_G, n_G)$
+P_G: genmatrix(lambda([i,j], if j=lu_G_perm[i] then 1 else 0), n_G, n_G)$
+y_G: linsolve(L_G, P_G . b_test)$
+x_lu: linsolve(U_G, y_G)$
+x_lu: ratsimp(x_lu)$
+display("LU 分解解:")$
+display(x_lu)$
+
+/* 10. 广义特征值问题 */
+display("--- 10. 广义特征值问题 ---")$
+
+/* 广义特征值问题: A*v = lambda*B*v */
+A_gen: matrix([2, -1], [-1, 2])$
+B_gen: matrix([1, 0], [0, 1])$
+
+display("A:")$
+display(A_gen)$
+display("B:")$
+display(B_gen)$
+
+/* 转换为标准特征值问题: B^(-1)*A*v = lambda*v */
+B_inv_A: ratsimp(invert(B_gen) . A_gen)$
+display("B^(-1)*A:")$
+display(B_inv_A)$
+
+/* 求解特征值 */
+char_poly_gen: charpoly(B_inv_A, lambda)$
+eigenvals_gen: solve(char_poly_gen = 0, lambda)$
+display("广义特征值:")$
+display(eigenvals_gen)$
+
+/* 11. 条件数与数值稳定性 */
+display("--- 11. 条件数与数值稳定性 ---")$
+
+/* 条件数衡量矩阵求解的数值稳定性 */
+/* cond(A) = ||A|| * ||A^(-1)|| */
+/* 对于 2-范数，条件数是最大奇异值与最小奇异值的比值 */
+
+/* 对于对称矩阵，特征值的绝对值比值 */
+H: matrix([1, 2], [2, 100])$
+display("病态矩阵 H:")$
+display(H)$
+
+eig_H: eigenvalues(H)$
+display("特征值:", eig_H)$
+
+/* 条件数估计 */
+max_eig: max(map(abs, eig_H[1]))$
+min_eig: min(map(abs, eig_H[1]))$
+cond_est: max_eig / min_eig$
+display("条件数估计:", cond_est)$
+display("条件数较大，矩阵病态，求解可能不稳定")$
+
+display("=== 矩阵分解示例完成 ===")$

@@ -1,0 +1,241 @@
+/* integrals.mac - 积分计算示例 */
+/* 本文件演示如何使用 Maxima 计算各种类型的积分 */
+
+/* 清除之前的定义 */
+kill(all)$
+
+/* 设置输出格式 */
+display2d: false$
+
+print("=== 积分计算示例 ===")$
+print("")$
+
+/* 1. 不定积分 */
+print("1. 不定积分计算")$
+
+/* 示例1：多项式积分 */
+f1: x^2$
+F1: integrate(f1, x)$
+print("∫x^2 dx = ", F1, " + C")$
+
+/* 示例2：三角函数积分 */
+f2: sin(x)$
+F2: integrate(f2, x)$
+print("∫sin(x) dx = ", F2, " + C")$
+
+f3: cos(x)$
+F3: integrate(f3, x)$
+print("∫cos(x) dx = ", F3, " + C")$
+
+/* 示例3：指数函数积分 */
+f4: exp(2*x)$
+F4: integrate(f4, x)$
+print("∫e^(2x) dx = ", F4, " + C")$
+
+/* 示例4：有理函数积分 */
+f5: 1/(1 + x^2)$
+F5: integrate(f5, x)$
+print("∫1/(1+x^2) dx = ", F5, " + C")$
+
+/* 示例5：对数函数积分 */
+f6: 1/x$
+F6: integrate(f6, x)$
+print("∫1/x dx = ", F6, " + C")$
+
+print("")$
+
+/* 2. 定积分 */
+print("2. 定积分计算")$
+
+/* 示例6：基本定积分 */
+f7: x^3 - 2*x$
+definite_integral1: integrate(f7, x, 0, 2)$
+print("∫_0^2 (x^3 - 2x) dx = ", definite_integral1)$
+
+/* 示例7：三角函数定积分 */
+f8: sin(x)$
+definite_integral2: integrate(f8, x, 0, %pi)$
+print("∫_0^π sin(x) dx = ", definite_integral2)$
+
+/* 示例8：指数函数定积分 */
+f9: exp(x)$
+definite_integral3: integrate(f9, x, 0, 1)$
+print("∫_0^1 e^x dx = ", definite_integral3)$
+
+print("")$
+
+/* 3. 换元积分法 */
+print("3. 换元积分法")$
+
+/* 示例9：第一类换元积分 */
+f10: 2*x * cos(x^2)$
+F10: integrate(f10, x)$
+print("∫ 2x*cos(x^2) dx = ", F10)$
+
+/* 手动换元验证 */
+/* 令 u = x^2, du = 2x dx */
+u_sub: x^2$
+du_sub: diff(u_sub, x)$
+f10_sub: cos(u_sub) * du_sub$
+F10_sub: integrate(f10_sub, u)$
+print("使用换元法: ∫ cos(u) du = ", subst(u=x^2, F10_sub))$
+
+print("")$
+
+/* 示例10：更复杂的换元积分 */
+f11: x * sqrt(1 + x^2)$
+F11: integrate(f11, x)$
+print("∫ x*sqrt(1+x^2) dx = ", F11)$
+
+print("")$
+
+/* 4. 分部积分法 */
+print("4. 分部积分法")$
+
+/* 示例11：分部积分 ∫ x*e^x dx */
+f12: x * exp(x)$
+F12: integrate(f12, x)$
+print("∫ x*e^x dx = ", F12)$
+
+/* 手动分部积分验证 */
+/* u = x, dv = e^x dx */
+/* du = dx, v = e^x */
+/* ∫ x*e^x dx = x*e^x - ∫ e^x dx */
+print("手动分部积分: ∫ x*e^x dx = x*e^x - ∫ e^x dx = x*e^x - e^x")$
+
+print("")$
+
+/* 示例12：分部积分 ∫ x*sin(x) dx */
+f13: x * sin(x)$
+F13: integrate(f13, x)$
+print("∫ x*sin(x) dx = ", F13)$
+
+print("")$
+
+/* 5. 三角函数积分 */
+print("5. 三角函数积分")$
+
+/* 示例13：三角函数积分 */
+f14: sin(x)^2$
+F14: integrate(f14, x)$
+print("∫ sin^2(x) dx = ", F14)$
+
+f15: cos(x)^2$
+F15: integrate(f15, x)$
+print("∫ cos^2(x) dx = ", F15)$
+
+f16: sin(x) * cos(x)$
+F16: integrate(f16, x)$
+print("∫ sin(x)cos(x) dx = ", F16)$
+
+print("")$
+
+/* 6. 有理函数积分 */
+print("6. 有理函数积分")$
+
+/* 示例14：部分分式分解 */
+f17: 1/(x^2 - 1)$
+F17: integrate(f17, x)$
+print("∫ 1/(x^2-1) dx = ", F17)$
+
+f18: 1/(x^2 + 1)$
+F18: integrate(f18, x)$
+print("∫ 1/(x^2+1) dx = ", F18)$
+
+f19: (2*x + 1)/(x^2 + x + 1)$
+F19: integrate(f19, x)$
+print("∫ (2x+1)/(x^2+x+1) dx = ", F19)$
+
+print("")$
+
+/* 7. 物理应用：变力做功 */
+print("7. 物理应用：变力做功")$
+
+/* 示例15：弹簧力做功 */
+/* 弹簧力 F(x) = 5x（牛顿） */
+F_spring: 5*x$
+
+/* 从 0 拉伸到 0.2 米所做的功 */
+W: integrate(F_spring, x, 0, 0.2)$
+print("弹簧力 F(x) = 5x 牛顿")$
+print("从 0 拉伸到 0.2 米所做的功: ", W, " 焦耳")$
+print("数值结果: ", float(W), " 焦耳")$
+
+print("")$
+
+/* 示例16：重力做功 */
+/* 质量为 m 的物体从高度 h1 移动到 h2 */
+F_gravity: m*g$  /* 重力 */
+W_gravity: integrate(F_gravity, h, h1, h2)$
+print("重力做功公式: W = ", W_gravity)$
+print("当 m=2kg, g=9.8m/s^2, h1=0, h2=10m 时:")$
+W_gravity_num: subst([m=2, g=9.8, h1=0, h2=10], W_gravity)$
+print("W = ", W_gravity_num, " = ", float(W_gravity_num), " 焦耳")$
+
+print("")$
+
+/* 8. 面积计算 */
+print("8. 面积计算")$
+
+/* 示例17：曲线下的面积 */
+/* 计算 y = x^2 从 0 到 1 的面积 */
+area1: integrate(x^2, x, 0, 1)$
+print("曲线 y=x^2 从 0 到 1 的面积: ", area1)$
+
+/* 示例18：两条曲线之间的面积 */
+/* 计算 y = x 和 y = x^2 之间的面积 */
+area2: integrate(x - x^2, x, 0, 1)$
+print("y=x 和 y=x^2 之间的面积: ", area2)$
+
+print("")$
+
+/* 9. 数值验证 */
+print("9. 数值验证")$
+
+/* 验证 ∫_0^1 x^2 dx = 1/3 */
+print("验证 ∫_0^1 x^2 dx = 1/3")$
+n_values: [10, 100, 1000, 10000]$
+print("n          | 梯形法则近似 | 误差")$
+exact_value: 1/3$
+
+for n in n_values do (
+    /* 简单的梯形法则实现 */
+    h: 1.0/n,
+    sum: 0,
+    for i:0 thru n do (
+        x_i: i*h,
+        sum: sum + x_i^2
+    ),
+    trapezoidal: h * (sum - 0.5*(0^2 + 1^2)),
+    err_val: abs(trapezoidal - exact_value),
+    printf(true, "%-10d | %.10f   | %.2e~%", n, trapezoidal, err_val)
+)$
+
+print("")$
+
+/* 10. 广义积分 */
+print("10. 广义积分")$
+
+/* 示例19：无穷积分 */
+f20: exp(-x)$
+improper_integral1: integrate(f20, x, 0, inf)$
+print("∫_0^∞ e^(-x) dx = ", improper_integral1)$
+
+/* 示例20：瑕积分 */
+f21: 1/sqrt(x)$
+improper_integral2: integrate(f21, x, 0, 1)$
+print("∫_0^1 1/√x dx = ", improper_integral2)$
+
+print("")$
+
+/* 11. 练习 */
+print("11. 练习")$
+print("尝试计算以下积分:")$
+print("1. ∫ x^3 * e^x dx")$
+print("2. ∫ 1/(x^2 + 4x + 5) dx")$
+print("3. ∫_0^π sin^2(x) dx")$
+print("4. ∫ x * ln(x) dx")$
+print("5. 计算 y = sin(x) 和 y = cos(x) 在 [0, π/4] 之间的面积")$
+print("")$
+
+print("=== 积分计算示例结束 ===")$

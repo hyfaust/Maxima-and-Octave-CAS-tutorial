@@ -1,0 +1,704 @@
+/* 第4章：边值问题 */
+/* 本文件演示如何使用Maxima求解边值问题(BVP) */
+/* 包括：打靶法、有限差分法、Sturm-Liouville问题、特征值问题 */
+/*
+ * 边值问题是在区间两端给定条件的ODE问题
+ * 与初值问题不同，需要特殊方法求解
+ *
+ * 作者: CAS Learn Tutorial
+ */
+
+/* 禁用2D显示以便于阅读 */
+display2d: false$
+
+printf(true, "=== 边值问题(BVP)示例 ===~%~%")$
+
+/* ============================================================
+   1. 直接求解边值问题（ode2 + bc2）
+   ============================================================ */
+/* 二阶线性ODE边值问题:
+   y'' + p(x)*y' + q(x)*y = r(x),  a <= x <= b
+   边界条件: y(a) = alpha, y(b) = beta_vec                                    */
+
+printf(true, "--- 1. 直接求解边值问题 ---~%~%")$
+
+/* 例1: y'' + y = 0, y(0)=0, y(pi/2)=1 */
+printf(true, "例1: y'' + y = 0, y(0)=0, y(pi/2)=1~%")$
+
+ode_bvp1: 'diff(y, x, 2) + y = 0$
+sol_bvp1: ode2(ode_bvp1, y, x)$
+printf(true, "通解: ~a~%", sol_bvp1)$
+
+/* 使用 bc2 施加边值条件 */
+sol_bvp1_specific: bc2(sol_bvp1, x=0, y=0, x=%pi/2, y=1)$
+printf(true, "边值解: ~a~%", sol_bvp1_specific)$
+
+/* 验证 */
+val_at_0: ev(rhs(sol_bvp1_specific), x=0)$
+val_at_pi2: ev(rhs(sol_bvp1_specific), x=%pi/2)$
+printf(true, "验证: y(0) = ~a, y(pi/2) = ~a~%~%", val_at_0, val_at_pi2)$
+
+/* 绘制解 */
+wxplot2d(rhs(sol_bvp1_specific), [x, 0, %pi/2],
+         [title, "BVP: y''+y=0, y(0)=0, y(pi/2)=1"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+/* 例2: y'' = -1, y(0)=0, y(1)=0 (泊松方程边值问题) */
+printf(true, "例2: y'' = -1, y(0)=0, y(1)=0~%")$
+
+sol2: ode2('diff(y, x, 2) = -1, y, x)$
+printf(true, "通解: ~a~%", sol2)$
+
+sol2_particular: rhs(sol2)$
+bc2_left: ev(sol2_particular, x=0) = 0$
+bc2_right: ev(sol2_particular, x=1) = 0$
+constants2: solve([bc2_left, bc2_right], [%k1, %k2])$
+printf(true, "待定常数: ~a~%", constants2)$
+
+sol2_final: subst(constants2[1], sol2_particular)$
+sol2_final: ratsimp(sol2_final)$
+printf(true, "特解: y(x) = ~a~%", sol2_final)$
+
+check_bc1: ev(sol2_final, x=0)$
+check_bc2: ev(sol2_final, x=1)$
+check_ode: ratsimp(diff(sol2_final, x, 2))$
+printf(true, "验证: y(0) = ~a, y(1) = ~a, y'' = ~a~%~%", check_bc1, check_bc2, check_ode)$
+
+wxplot2d(sol2_final, [x, 0, 1],
+         [title, "BVP: y''=-1, y(0)=0, y(1)=0"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+/* 例3: 非齐次边界条件 y'' + 4y = 0, y(0)=1, y(pi)=2 */
+printf(true, "例3: y'' + 4y = 0, y(0)=1, y(pi)=2~%")$
+
+ode_bvp3: 'diff(y, x, 2) + 4*y = 0$
+sol_bvp3: ode2(ode_bvp3, y, x)$
+printf(true, "通解: ~a~%", sol_bvp3)$
+
+sol_bvp3_specific: bc2(sol_bvp3, x=0, y=1, x=%pi, y=2)$
+printf(true, "边值解: ~a~%~%", sol_bvp3_specific)$
+
+/* ============================================================
+   2. 打靶法 (Shooting Method)
+   ============================================================ */
+/* 打靶法思想:
+   将BVP转化为IVP，猜测缺失的初值 y'(a) = s
+   求解IVP得到 y(b;s)
+   调整 s 使得 y(b;s) = beta_vec
+   即求解方程 F(s) = y(b;s) - beta_vec = 0                            */
+
+printf(true, "--- 2. 打靶法 (Shooting Method) ---~%~%")$
+
+printf(true, "问题: y'' + y = 0, y(0)=0, y(pi/2)=1~%")$
+printf(true, "打靶法步骤:~%")$
+printf(true, "  1. 猜测 y'(0) = s~%")$
+printf(true, "  2. 求解IVP: y''+y=0, y(0)=0, y'(0)=s~%")$
+printf(true, "  3. 计算 y(pi/2)~%")$
+printf(true, "  4. 调整 s 使 y(pi/2)=1~%~%")$
+
+/* 步骤2: 求解IVP（通解） */
+ode_shoot: 'diff(y, x, 2) + y = 0$
+sol_shoot: ode2(ode_shoot, y, x)$
+
+/* 施加初始条件 y(0)=0, y'(0)=s */
+sol_shoot_ivp: ic2(sol_shoot, x=0, y=0, 'diff(y,x)=s)$
+printf(true, "IVP解 (y'(0)=s): ~a~%", sol_shoot_ivp)$
+
+/* 计算 y(pi/2) */
+y_at_b: ev(rhs(sol_shoot_ivp), x=%pi/2)$
+y_at_b: ratsimp(y_at_b)$
+printf(true, "y(pi/2) = ~a~%", y_at_b)$
+
+/* 步骤4: 求解 F(s) = y(pi/2) - 1 = 0 */
+target_eq: y_at_b - 1 = 0$
+s_sol: solve(target_eq, s)$
+printf(true, "求解 y(pi/2) = 1: s = ~a~%", s_sol)$
+
+/* 代入得到最终解 */
+sol_shoot_final: ev(rhs(sol_shoot_ivp), s=rhs(s_sol[1]))$
+sol_shoot_final: expand(sol_shoot_final)$
+printf(true, "打靶法得到的解: y(x) = ~a~%", sol_shoot_final)$
+
+/* 与直接法比较 */
+printf(true, "直接法解: ~a~%~%", rhs(sol_bvp1_specific))$
+
+/* 可视化打靶过程: 不同 s 值的解 */
+printf(true, "不同猜测值 s 对应的解曲线:~%")$
+
+shoot_curve(s_val) := ev(rhs(sol_shoot_ivp), s=s_val)$
+
+wxplot2d([shoot_curve(0.5), shoot_curve(1.0), shoot_curve(1.5), shoot_curve(2.0)],
+         [x, 0, %pi/2],
+         [title, "Shooting Method: Different Initial Slopes"],
+         [legend, "s=0.5", "s=1.0", "s=1.5", "s=2.0"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制不同 s 值的解曲线~%~%")$
+
+/* ============================================================
+   3. 打靶法：非线性问题
+   ============================================================ */
+/* 非线性BVP: y'' = -y^2, y(0)=1, y(1)=0
+   此时不能用解析法，需要数值迭代                               */
+
+printf(true, "--- 3. 打靶法：非线性问题 ---~%~%")$
+
+printf(true, "非线性BVP: y'' = -y^2, y(0)=1, y(1)=0~%")$
+printf(true, "（此问题需要数值方法，这里演示概念）~%~%")$
+
+/* 将二阶ODE化为一阶系统: y1' = y2, y2' = -y1^2 */
+printf(true, "将二阶ODE化为一阶系统:~%")$
+printf(true, "  y1' = y2~%")$
+printf(true, "  y2' = -y1^2~%")$
+printf(true, "  y1(0) = 1, y1(1) = 0~%~%")$
+
+/* 定义打靶函数: 给定 s，求解IVP并返回 y(1) */
+shoot_nonlinear(s) := block(
+    local(rk_res, t_vals, y1_vals, n_pts),
+    rk_res: rk(
+        [y2, -y1^2], [y1, y2], [1, s], [t, 0, 1, 0.01]
+    ),
+    t_vals: rk_res[1],
+    y1_vals: rk_res[2],
+    n_pts: length(t_vals),
+    return(y1_vals[n_pts])
+)$
+
+/* 用不同的初始斜率 s = y'(0) 进行打靶 */
+s_try_1: -1.0$
+s_try_2: -0.5$
+s_try_3: -0.2$
+
+y_end_1: shoot_nonlinear(s_try_1)$
+y_end_2: shoot_nonlinear(s_try_2)$
+y_end_3: shoot_nonlinear(s_try_3)$
+
+printf(true, "打靶试探:~%")$
+printf(true, "  s = ~a: y(1) = ~a~%", s_try_1, y_end_1)$
+printf(true, "  s = ~a: y(1) = ~a~%", s_try_2, y_end_2)$
+printf(true, "  s = ~a: y(1) = ~a~%~%", s_try_3, y_end_3)$
+
+/* 二分法迭代求解 F(s) = y(1) - 0 = 0 */
+printf(true, "二分法迭代求解:~%")$
+s_lo: -1.0$
+s_hi: 0.0$
+tol: 1e-6$
+
+for iter: 1 thru 50 while abs(s_hi - s_lo) > tol do block(
+    s_mid: (s_lo + s_hi) / 2,
+    y_mid: shoot_nonlinear(s_mid),
+    if y_mid > 0 then (
+        s_hi: s_mid
+    ) else (
+        s_lo: s_mid
+    ),
+    if iter <= 10 or iter = 50 then
+        printf(true, "  迭代 ~a: s=~a, y(1)=~a~%", iter, s_mid, y_mid)
+)$
+
+s_final: (s_lo + s_hi) / 2$
+printf(true, "~%收敛结果: s = ~a~%~%", s_final)$
+
+/* 绘制最终解 */
+rk_res_final: rk(
+    [y2, -y1^2], [y1, y2], [1, s_final], [t, 0, 1, 0.01]
+)$
+t_final: rk_res_final[1]$
+y1_final: rk_res_final[2]$
+
+/* 绘制打靶过程 */
+rk_p1: rk([y2, -y1^2], [y1, y2], [1, -1.0], [t, 0, 1, 0.01])$
+t_p1: rk_p1[1]$  y1_p1: rk_p1[2]$
+rk_p2: rk([y2, -y1^2], [y1, y2], [1, -0.5], [t, 0, 1, 0.01])$
+t_p2: rk_p2[1]$  y1_p2: rk_p2[2]$
+rk_p3: rk([y2, -y1^2], [y1, y2], [1, -0.2], [t, 0, 1, 0.01])$
+t_p3: rk_p3[1]$  y1_p3: rk_p3[2]$
+
+wxplot2d([[discrete, t_p1, y1_p1], [discrete, t_p2, y1_p2],
+          [discrete, t_p3, y1_p3], [discrete, t_final, y1_final]],
+         [t, 0, 1],
+         [title, "Shooting for Nonlinear BVP: y''=-y^2"],
+         [legend, "s=-1.0", "s=-0.5", "s=-0.2", "converged"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制非线性BVP打靶过程~%~%")$
+
+/* ============================================================
+   4. 有限差分法
+   ============================================================ */
+/* 有限差分法思想:
+   将区间 [a,b] 分为 N 个子区间，步长 h = (b-a)/N
+   用中心差分近似二阶导数:
+     y''(x_i) ≈ (y_{i-1} - 2*y_i + y_{i+1}) / h^2
+   将BVP转化为线性方程组 Ay = b                                    */
+
+printf(true, "--- 4. 有限差分法 ---~%~%")$
+
+/* 问题: y'' + y = 0, y(0)=0, y(pi/2)=1 */
+printf(true, "问题: y'' + y = 0, y(0)=0, y(pi/2)=1~%~%")$
+
+/* 参数设置 */
+a_val: 0$
+b_val: %pi/2$
+N: 9$    /* 内部节点数 (N+1 个区间) */
+h: (b_val - a_val) / (N + 1)$
+
+printf(true, "区间: [0, pi/2], 内部节点数 N=~a, 步长 h=~a~%~%", N, h)$
+
+/* 对于方程 y'' + y = 0:
+   (y_{i-1} - 2*y_i + y_{i+1})/h^2 + y_i = 0
+   => y_{i-1} + (-2 + h^2)*y_i + y_{i+1} = 0
+   边界: y_0 = 0, y_{N+1} = 1                                    */
+
+printf(true, "有限差分离散化:~%")$
+printf(true, "  (y_{{i-1}} - 2*y_i + y_{{i+1}})/h^2 + y_i = 0~%")$
+printf(true, "  => y_{{i-1}} + (-2+h^2)*y_i + y_{{i+1}} = 0~%~%")$
+
+/* Thomas 算法求解三对角系统 */
+/* a_i * y_{i-1} + b_i * y_i + c_i * y_{i+1} = d_i
+   这里 a_i = 1, b_i = -2+h^2, c_i = 1
+   d_1 = 0, d_N = -1                                             */
+
+alpha: makelist(0, i, 1, N)$
+beta_vec: makelist(0, i, 1, N)$
+
+b_diag: -2 + h^2$
+
+alpha[1]: 1 / b_diag$
+beta_vec[1]: 0 / b_diag$
+
+for i: 2 thru N do block(
+    denom: b_diag - alpha[i-1],
+    alpha[i]: 1 / denom,
+    if i = N then
+        beta_vec[i]: (-1 - beta_vec[i-1]) / denom
+    else
+        beta_vec[i]: (0 - beta_vec[i-1]) / denom
+)$
+
+/* 回代 */
+y_fd: makelist(0, i, 1, N)$
+y_fd[N]: beta_vec[N]$
+
+for i: N-1 thru 1 step -1 do (
+    y_fd[i]: beta_vec[i] - alpha[i] * y_fd[i+1]
+)$
+
+/* 输出结果 */
+printf(true, "有限差分法结果:~%")$
+printf(true, "  x_i          y_numerical     y_exact~%")$
+
+for i: 1 thru N do block(
+    x_i: i * h,
+    y_exact_i: sin(x_i),
+    printf(true, "  ~10f   ~10f   ~10f~%", x_i, y_fd[i], y_exact_i)
+)$
+
+printf(true, "  ~10f   ~10f   ~10f  (边界)~%", 0.0, 0.0, 0.0)$
+printf(true, "  ~10f   ~10f   ~10f  (边界)~%", float(b_val), 1.0, float(sin(b_val)))$
+
+printf(true, "~%")$
+
+/* 构建完整解进行绘图 */
+x_all: cons(0, makelist(i*h, i, 1, N))$
+x_all: append(x_all, [b_val])$
+y_all: cons(0.0, append(y_fd, [1.0]))$
+
+wxplot2d([[discrete, x_all, y_all], sin(x)],
+         [x, 0, %pi/2],
+         [title, "Finite Difference vs Exact Solution"],
+         [legend, "FD solution", "sin(x)"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制有限差分解与精确解的比较图~%~%")$
+
+/* ============================================================
+   5. 有限差分法：非齐次方程
+   ============================================================ */
+
+printf(true, "--- 5. 有限差分法：非齐次方程 ---~%~%")$
+
+/* 问题: y'' - y = -1, y(0)=0, y(1)=0 */
+printf(true, "问题: y'' - y = -1, y(0)=0, y(1)=0~%~%")$
+
+a_val2: 0$
+b_val2: 1$
+N2: 19$
+h2: (b_val2 - a_val2) / (N2 + 1)$
+
+printf(true, "区间: [0,1], N=~a, h=~a~%~%", N2, h2)$
+
+/* 有限差分: (y_{i-1} - 2y_i + y_{i+1})/h^2 - y_i = -1
+   => y_{i-1} + (-2-h^2)*y_i + y_{i+1} = -h^2                   */
+
+b_diag2: -2 - h2^2$
+d_val: -h2^2$
+
+alpha2: makelist(0, i, 1, N2)$
+beta2_vec: makelist(0, i, 1, N2)$
+
+alpha2[1]: 1 / b_diag2$
+beta2_vec[1]: d_val / b_diag2$
+
+for i: 2 thru N2 do block(
+    denom: b_diag2 - alpha2[i-1],
+    alpha2[i]: 1 / denom,
+    beta2_vec[i]: (d_val - beta2_vec[i-1]) / denom
+)$
+
+y_fd2: makelist(0, i, 1, N2)$
+y_fd2[N2]: beta2_vec[N2]$
+
+for i: N2-1 thru 1 step -1 do (
+    y_fd2[i]: beta2_vec[i] - alpha2[i] * y_fd2[i+1]
+)$
+
+/* 精确解: y = C1*e^x + C2*e^(-x) + 1 */
+C1_val: (1/%e - 1) / (%e - 1/%e)$
+C2_val: -1 - C1_val$
+
+printf(true, "有限差分法结果 (y''-y=-1):~%")$
+printf(true, "  x_i          y_FD            y_exact~%")$
+
+for i: 1 thru min(N2, 10) do block(
+    x_i: i * h2,
+    y_exact_i: C1_val * %e^x_i + C2_val * %e^(-x_i) + 1,
+    printf(true, "  ~10f   ~10f   ~10f~%", x_i, y_fd2[i], float(y_exact_i))
+)$
+
+printf(true, "  ... (共 ~a 个内部节点)~%~%", N2)$
+
+/* 绘图 */
+x_all2: cons(0, makelist(i*h2, i, 1, N2))$
+x_all2: append(x_all2, [b_val2])$
+y_all2: cons(0.0, append(y_fd2, [0.0]))$
+
+exact_sol2(x_val) := C1_val * %e^x_val + C2_val * %e^(-x_val) + 1$
+
+wxplot2d([[discrete, x_all2, y_all2],
+          [lambda([x], exact_sol2(x))]],
+         [x, 0, 1],
+         [title, "Finite Difference: y''-y=-1"],
+         [legend, "FD", "Exact"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制非齐次BVP的有限差分解~%~%")$
+
+/* ============================================================
+   6. Sturm-Liouville 问题
+   ============================================================ */
+/* Sturm-Liouville 问题的一般形式:
+   -(p(x)*y')' + q(x)*y = lambda * w(x) * y,  a <= x <= b
+   边界条件: alpha1*y(a) + alpha2*y'(a) = 0
+             beta1*y(b) + beta2*y'(b) = 0
+   特征值 lambda_n 构成无穷序列，特征函数正交                    */
+
+printf(true, "--- 6. Sturm-Liouville 问题 ---~%~%")$
+
+assume(lambda > 0)$
+
+/* 例1: y'' + lambda*y = 0, y(0)=0, y(L)=0 */
+printf(true, "例1: y'' + lambda*y = 0, y(0)=0, y(L)=0~%")$
+printf(true, "(即 p=1, q=0, w=1 的 Sturm-Liouville 问题)~%~%")$
+
+ode_sl1: 'diff(y, x, 2) + lambda * y = 0$
+sol_sl1: ode2(ode_sl1, y, x)$
+printf(true, "通解: ~a~%", sol_sl1)$
+
+/* 手动代入 x=0, y=0 求解积分常数 */
+sol_sl1_at0: ev(rhs(sol_sl1), x=0)$
+k2_val: solve(sol_sl1_at0 = 0, %k2)$
+sol_sl1_bc1: subst(k2_val[1], sol_sl1)$
+printf(true, "由 y(0)=0: ~a~%", sol_sl1_bc1)$
+
+printf(true, "由 y(L)=0: sin(sqrt(lambda)*L) = 0~%")$
+printf(true, "特征值: lambda_n = (n*pi/L)^2, n=1,2,3,...~%")$
+printf(true, "特征函数: y_n(x) = sin(n*pi*x/L)~%~%")$
+
+/* 分情况讨论 */
+/* lambda > 0: y = A*sin(sqrt(lambda)*x) + B*cos(sqrt(lambda)*x) */
+printf(true, "当 lambda > 0 时:~%")$
+printf(true, "  y(x) = A*sin(sqrt(lambda)*x) + B*cos(sqrt(lambda)*x)~%")$
+printf(true, "  y(0)=0 => B=0~%")$
+printf(true, "  y(L)=0 => A*sin(sqrt(lambda)*L)=0~%")$
+printf(true, "  非平凡解: sqrt(lambda)*L = n*pi, n=1,2,3,...~%")$
+printf(true, "  特征值: lambda_n = (n*pi/L)^2~%")$
+printf(true, "  特征函数: y_n(x) = sin(n*pi*x/L)~%~%")$
+
+/* lambda = 0: y = Ax + B */
+printf(true, "当 lambda = 0 时:~%")$
+printf(true, "  y(x) = Ax + B~%")$
+printf(true, "  y(0)=0 => B=0~%")$
+printf(true, "  y(L)=0 => A*L=0 => A=0~%")$
+printf(true, "  平凡解: y = 0~%~%")$
+
+/* lambda < 0 */
+printf(true, "当 lambda < 0 时:~%")$
+printf(true, "  y(x) = A*sinh(sqrt(-lambda)*x) + B*cosh(sqrt(-lambda)*x)~%")$
+printf(true, "  y(0)=0 => B=0~%")$
+printf(true, "  y(L)=0 => A*sinh(sqrt(-lambda)*L)=0~%")$
+printf(true, "  sinh!=0 (除x=0外), 故 A=0, 平凡解~%~%")$
+
+/* 验证正交性 */
+printf(true, "验证特征函数的正交性 (L=1):~%")$
+for m: 1 thru 3 do (
+    for n: m thru 3 do block(
+        integral_val: integrate(sin(m*%pi*x) * sin(n*%pi*x), x, 0, 1),
+        integral_val: ratsimp(integral_val),
+        printf(true, "  <sin(~a*pi*x), sin(~a*pi*x)> = ~a~%", m, n, integral_val)
+    )
+)$
+
+printf(true, "~%")$
+
+/* 例2: Legendre 方程作为 S-L 问题 */
+printf(true, "例2: Legendre 方程~%")$
+printf(true, "  ((1-x^2)*y')' + lambda*y = 0, -1<=x<=1~%")$
+printf(true, "  p(x)=1-x^2, q(x)=0, w(x)=1~%")$
+printf(true, "  lambda = n(n+1)~%~%")$
+
+ode_legendre: (1-x^2)*'diff(y, x, 2) - 2*x*'diff(y, x) + n*(n+1)*y = 0$
+sol_legendre: ode2(ode_legendre, y, x)$
+printf(true, "Legendre 方程的解: ~a~%", sol_legendre)$
+printf(true, "  (当 n 为非负整数时，Legendre 多项式 P_n(x) 有界)~%~%")$
+
+/* 计算前几个 Legendre 多项式 */
+printf(true, "前几个 Legendre 多项式:~%")$
+for i: 0 thru 5 do block(
+    Pn: legendre_p(i, x),
+    printf(true, "  P_~a(x) = ~a~%", i, expand(Pn))
+)$
+
+printf(true, "~%")$
+
+/* ============================================================
+   7. 特征值边值问题
+   ============================================================ */
+
+printf(true, "--- 7. 特征值边值问题 ---~%~%")$
+
+printf(true, "特征值BVP: y'' + lambda*y = 0~%")$
+printf(true, "边界条件: y(0)=0, y'(L)=0 (Dirichlet-Neumann)~%~%")$
+
+ode_eig: 'diff(y, x, 2) + lambda * y = 0$
+sol_eig: ode2(ode_eig, y, x)$
+printf(true, "通解: ~a~%", sol_eig)$
+
+printf(true, "设 lambda > 0, 令 mu = sqrt(lambda)~%")$
+printf(true, "  通解: y = C1*cos(mu*x) + C2*sin(mu*x)~%")$
+printf(true, "  y(0)=0 => C1=0 => y = C2*sin(mu*x)~%")$
+printf(true, "  y'(x) = C2*mu*cos(mu*x)~%")$
+printf(true, "  y'(L)=0 => cos(mu*L)=0 => mu*L = (2n-1)*pi/2~%")$
+printf(true, "  特征值: lambda_n = ((2n-1)*pi/(2L))^2, n=1,2,3,...~%")$
+printf(true, "  特征函数: y_n(x) = sin((2n-1)*pi*x/(2L))~%~%")$
+
+/* L=1 的情况 */
+printf(true, "L=1 时的特征值:~%")$
+for n: 1 thru 5 do block(
+    lambda_n: ((2*n-1)*%pi/2)^2,
+    printf(true, "  lambda_~a = ~a ≈ ~a~%", n, lambda_n, float(lambda_n))
+)$
+
+printf(true, "~%")$
+
+/* 特征函数正交性 */
+printf(true, "特征函数正交性验证 (L=1):~%")$
+for m: 1 thru 3 do (
+    for n: m thru 3 do block(
+        integrand: sin((2*m-1)*%pi*x/2) * sin((2*n-1)*%pi*x/2),
+        integral_val: integrate(integrand, x, 0, 1),
+        integral_val: ratsimp(integral_val),
+        printf(true, "  <y_~a, y_~a> = ~a~%", m, n, integral_val)
+    )
+)$
+
+printf(true, "~%")$
+
+/* 绘制前几个特征函数 */
+y_n_func(n_val, x_val) := sin((2*n_val-1)*%pi*x_val/2)$
+
+wxplot2d([y_n_func(1, x), y_n_func(2, x), y_n_func(3, x)],
+         [x, 0, 1],
+         [title, "Eigenfunctions: y(0)=0, y'(1)=0"],
+         [legend, "n=1", "n=2", "n=3"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制特征函数图~%~%")$
+
+/* ============================================================
+   8. Neumann 边界条件的特征值问题
+   ============================================================ */
+
+printf(true, "--- 8. Neumann 边界条件 ---~%~%")$
+
+printf(true, "问题: y'' + lambda*y = 0, y'(0)=0, y'(L)=0~%")$
+printf(true, "(两端都是 Neumann 条件)~%~%")$
+
+printf(true, "求解:~%")$
+printf(true, "  y = C1*cos(mu*x) + C2*sin(mu*x)~%")$
+printf(true, "  y'(0)=0 => C2*mu=0 => C2=0~%")$
+printf(true, "  y = C1*cos(mu*x)~%")$
+printf(true, "  y'(L)=0 => -C1*mu*sin(mu*L)=0 => sin(mu*L)=0~%")$
+printf(true, "  mu_n = n*pi/L => lambda_n = (n*pi/L)^2~%")$
+printf(true, "  特征函数: y_n(x) = cos(n*pi*x/L)~%")$
+printf(true, "  注意: n=0 时 lambda_0=0, y_0=1 (常数解)~%~%")$
+
+/* 验证正交性 */
+printf(true, "正交性验证 (L=1):~%")$
+for m: 0 thru 3 do (
+    for n: m thru 3 do block(
+        integrand: cos(m*%pi*x) * cos(n*%pi*x),
+        integral_val: integrate(integrand, x, 0, 1),
+        integral_val: ratsimp(integral_val),
+        printf(true, "  <cos(~a*pi*x), cos(~a*pi*x)> = ~a~%", m, n, integral_val)
+    )
+)$
+
+printf(true, "~%")$
+
+/* ============================================================
+   9. 有限差分法求特征值
+   ============================================================ */
+/* 将 S-L 特征值问题离散化为矩阵特征值问题
+   y'' + lambda*y = 0, y(0)=0, y(1)=0
+   离散化: (y_{i-1} - 2y_i + y_{i+1})/h^2 = -lambda*y_i
+   即 A*y = lambda*y, 其中 A 是三对角矩阵                         */
+
+printf(true, "--- 9. 有限差分法求特征值 ---~%~%")$
+
+printf(true, "问题: y'' + lambda*y = 0, y(0)=0, y(1)=0~%")$
+printf(true, "离散化为矩阵特征值问题~%~%")$
+
+N_eig: 9$
+h_eig: 1.0 / (N_eig + 1)$
+
+printf(true, "N=~a, h=~a~%~%", N_eig, h_eig)$
+
+/* 对于三对角矩阵，特征值有解析公式:
+   lambda_k = (4/h^2)*sin^2(k*pi/(2*(N+1)))                         */
+
+printf(true, "解析特征值公式: lambda_k = (4/h^2)*sin^2(k*pi/(2*(N+1)))~%")$
+printf(true, "数值特征值与精确值比较:~%")$
+printf(true, "  k     lambda_FD           lambda_exact        误差~%")$
+
+for k: 1 thru N_eig do block(
+    lambda_exact: (k*%pi)^2,
+    lambda_fd: (4/h_eig^2) * sin(k*%pi*h_eig/2)^2,
+    lambda_fd: float(lambda_fd),
+    lambda_exact_f: float(lambda_exact),
+    err: abs(lambda_fd - lambda_exact_f),
+    printf(true, "  ~a   ~15f   ~15f   ~a~%", k, lambda_fd, lambda_exact_f, err)
+)$
+
+printf(true, "~%")$
+
+/* 构建实际矩阵 */
+printf(true, "构建三对角矩阵 A (N x N):~%")$
+
+A_eig: zeromatrix(N_eig, N_eig)$
+for i: 1 thru N_eig do (
+    A_eig[i][i]: -2 / h_eig^2,
+    if i > 1 then A_eig[i][i-1]: 1 / h_eig^2,
+    if i < N_eig then A_eig[i][i+1]: 1 / h_eig^2
+)$
+
+/* 三对角矩阵的解析特征值 */
+printf(true, "三对角矩阵的解析特征值:~%")$
+for k: 1 thru N_eig do block(
+    eig_val: -2/h_eig^2 + 2/h_eig^2 * cos(k*%pi/(N_eig+1)),
+    lambda_k: -eig_val,
+    printf(true, "  lambda_~a = ~a~%", k, float(lambda_k))
+)$
+
+/* N=3 小矩阵的手动求解 */
+printf(true, "~%N=3 小矩阵的手动求解:~%")$
+
+A_small: matrix([2, -1, 0], [-1, 2, -1], [0, -1, 2])$
+printf(true, "离散化矩阵 A (N=3):~%")$
+printf(true, "  [2  -1   0]~%")$
+printf(true, "  [-1  2  -1]~%")$
+printf(true, "  [0  -1   2]~%~%")$
+
+h_small: 1.0 / 4$
+printf(true, "理论特征值 (h=1/4):~%")$
+for k: 1 thru 3 do block(
+    mu_k: 2 - 2*cos(k*%pi/4),
+    lambda_k: mu_k / h_small^2,
+    lambda_exact: (k*%pi)^2,
+    printf(true, "  k=~a: mu=~a, lambda_FD=~a, lambda_exact=~a~%",
+           k, float(mu_k), float(lambda_k), float(lambda_exact))
+)$
+
+/* 用特征多项式求解 */
+char_poly_3: charpoly(A_small, lambda)$
+printf(true, "~%特征多项式: ~a~%", expand(char_poly_3))$
+eigenvals_3: solve(char_poly_3 = 0, lambda)$
+printf(true, "矩阵 A 的特征值: ~a~%", eigenvals_3)$
+
+printf(true, "~%")$
+
+/* ============================================================
+   10. 物理应用：梁的振动
+   ============================================================ */
+
+printf(true, "--- 10. 物理应用：梁的振动 ---~%~%")$
+
+/* Euler-Bernoulli 梁方程:
+   EI * y'''' = rho*A * omega^2 * y
+   简支梁边界: y(0)=y''(0)=y(L)=y''(L)=0                           */
+
+printf(true, "简支梁振动: EI*y'''' = rho*A*omega^2*y~%")$
+printf(true, "边界条件: y(0)=y''(0)=y(L)=y''(L)=0~%~%")$
+
+ode_beam: 'diff(y, x, 4) - k^4 * y = 0$
+sol_beam: ode2(ode_beam, y, x)$
+printf(true, "y'''' - k^4*y = 0 的通解: ~a~%", sol_beam)$
+
+printf(true, "~%对于简支梁，特征函数为 sin(n*pi*x/L)~%")$
+printf(true, "代入方程: (n*pi/L)^4 = k^4 = rho*A*omega^2/(EI)~%")$
+printf(true, "固有频率: omega_n = (n*pi/L)^2 * sqrt(EI/(rho*A))~%")$
+printf(true, "  n=1: 基频 (第一阶模态)~%")$
+printf(true, "  n=2: 第二阶模态~%")$
+printf(true, "  ...~%~%")$
+
+/* 数值示例 */
+printf(true, "数值示例: L=1m, EI=1 N*m^2, rho*A=1 kg/m~%")$
+for n: 1 thru 5 do block(
+    omega_n: (n*%pi)^2,
+    freq_n: omega_n / (2*%pi),
+    printf(true, "  n=~a: omega=~a rad/s, f=~a Hz~%", n, float(omega_n), float(freq_n))
+)$
+
+printf(true, "~%")$
+
+/* 绘制前几阶振型 */
+wxplot2d([sin(%pi*x), sin(2*%pi*x), sin(3*%pi*x)],
+         [x, 0, 1],
+         [title, "Beam Vibration Modes (Simply Supported)"],
+         [legend, "Mode 1", "Mode 2", "Mode 3"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+printf(true, "已绘制梁的振型图~%~%")$
+
+/* ============================================================
+   11. 总结
+   ============================================================ */
+
+printf(true, "--- 11. 边值问题求解方法总结 ---~%~%")$
+
+printf(true, "┌──────────────────┬───────────────────────────────────────┐~%")$
+printf(true, "│ 方法             │ 特点                                  │~%")$
+printf(true, "├──────────────────┼───────────────────────────────────────┤~%")$
+printf(true, "│ 直接法(ode2+bc2) │ 仅适用于线性ODE，Maxima内置          │~%")$
+printf(true, "│ 打靶法           │ 将BVP转为IVP，适用于非线性问题       │~%")$
+printf(true, "│ 有限差分法       │ 离散化为线性方程组，通用性强         │~%")$
+printf(true, "│ 特征值问题       │ S-L理论，正交展开，谱方法基础        │~%")$
+printf(true, "└──────────────────┴───────────────────────────────────────┘~%~%")$
+
+printf(true, "Sturm-Liouville 理论要点:~%")$
+printf(true, "  1. 特征值构成无穷递增序列 lambda_1 < lambda_2 < ...~%")$
+printf(true, "  2. 特征函数关于权重函数 w(x) 正交~%")$
+printf(true, "  3. 任意函数可按特征函数展开（广义Fourier级数）~%")$
+printf(true, "  4. 是分离变量法求解PDE的理论基础~%~%")$
+
+printf(true, "=== 边值问题示例完成 ===~%")$

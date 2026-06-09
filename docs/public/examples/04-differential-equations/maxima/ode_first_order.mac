@@ -1,0 +1,169 @@
+/* 一阶常微分方程示例 */
+/* 本文件演示如何使用Maxima求解一阶常微分方程 */
+/* 包括可分离变量方程、线性方程和恰当方程 */
+
+/* 显示标题 */
+display2d: false$  /* 禁用2D显示以便于阅读 */
+
+print("=== 一阶常微分方程示例 ===")$
+print("")$
+
+/* 1. 可分离变量方程示例 */
+print("1. 可分离变量方程: dy/dx = x*y")$
+print("--------------------------------")$
+
+/* 定义微分方程 */
+ode1: 'diff(y, x) = x * y$
+
+/* 求解微分方程 */
+sol1: ode2(ode1, y, x)$
+print("通解: ", sol1)$
+
+/* 求满足初始条件 y(0)=2 的特解 */
+sol1_specific: ic1(sol1, x=0, y=2)$
+print("满足 y(0)=2 的特解: ", sol1_specific)$
+
+/* 绘制解曲线 */
+wxplot2d([2*exp(x^2/2)], [x, -2, 2],
+         [title, "dy/dx = x*y, y(0)=2"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+print("")$
+print("")$
+
+/* 2. 线性微分方程示例 */
+print("2. 一阶线性微分方程: dy/dx + (2/x)*y = x^2")$
+print("-------------------------------------------")$
+
+/* 定义微分方程 */
+ode2: 'diff(y, x) + (2/x)*y = x^2$
+
+/* 求解微分方程 */
+sol2: ode2(ode2, y, x)$
+print("通解: ", sol2)$
+
+/* 求满足初始条件 y(1)=1 的特解 */
+sol2_specific: ic1(sol2, x=1, y=1)$
+print("满足 y(1)=1 的特解: ", sol2_specific)$
+
+/* 绘制特解曲线 */
+wxplot2d(x^3/5 + 4/(5*x^2), [x, 0.5, 3],
+         [title, "dy/dx + (2/x)y = x^2, y(1)=1"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+print("")$
+print("")$
+
+/* 3. 恰当微分方程示例 */
+print("3. 恰当微分方程: (2xy + 3)dx + (x^2 - 1)dy = 0")$
+print("-----------------------------------------------")$
+
+/* 定义方程 M*dx + N*dy = 0 */
+M: 2*x*y + 3$
+N: x^2 - 1$
+
+/* 验证恰当性 */
+dM_dy: diff(M, y)$
+dN_dx: diff(N, x)$
+
+print("∂M/∂y = ", dM_dy)$
+print("∂N/∂x = ", dN_dx)$
+
+if dM_dy = dN_dx then
+    print("方程是恰当的")
+else
+    print("方程不是恰当的")$
+
+/* 求解恰当方程 */
+/* 对M关于x积分得到F */
+F: integrate(M, x)$
+print("F = ∫M dx = ", F)$
+
+/* 对F关于y求偏导 */
+dF_dy: diff(F, y)$
+print("∂F/∂y = ", dF_dy)$
+
+/* 求解g(y) */
+g_y: integrate(N - dF_dy, y)$
+print("g(y) = ", g_y)$
+
+/* 完整的F */
+F_complete: F + g_y$
+print("F(x,y) = ", F_complete)$
+
+/* 通解 */
+print("通解: F(x,y) = C")$
+print(F_complete, " = C")$
+
+print("")$
+print("")$
+
+/* 4. 其他类型的一阶ODE */
+print("4. 其他类型的一阶ODE")$
+print("---------------------")$
+
+/* 伯努利方程: y' + P(x)*y = Q(x)*y^n */
+print("伯努利方程示例: y' + y/x = y^2")$
+ode_bernoulli: 'diff(y, x) + y/x = y^2$
+sol_bernoulli: ode2(ode_bernoulli, y, x)$
+print("通解: ", sol_bernoulli)$
+
+/* 里卡蒂方程: y' = P(x) + Q(x)*y + R(x)*y^2 */
+print("")$
+print("里卡蒂方程示例: y' = 1 + y/x - y^2")$
+ode_riccati: 'diff(y, x) = 1 + y/x - y^2$
+sol_riccati: ode2(ode_riccati, y, x)$
+print("通解: ", sol_riccati)$
+
+print("")$
+print("")$
+
+/* 5. 数值求解示例 */
+print("5. 数值求解一阶ODE")$
+print("-------------------")$
+
+/* 定义ODE函数: dy/dt = -2*y + sin(t) */
+f_numeric: -2*y + sin(t)$
+
+/* 使用龙格-库塔法数值求解 */
+/* 初始条件: y(0) = 1 */
+/* 时间范围: t = 0 到 10 */
+rk_result: rk(f_numeric, y, 1, [t, 0, 10, 0.1])$
+t_vals: rk_result[1]$
+y_vals: rk_result[2]$
+
+/* 绘制数值解 */
+wxplot2d([discrete, t_vals, y_vals], [t, 0, 10],
+         [title, "数值解: dy/dt = -2y + sin(t), y(0)=1"],
+         [xlabel, "t"], [ylabel, "y"])$
+
+/* 计算解析解 */
+ode_numeric: 'diff(y, t) = -2*y + sin(t)$
+sol_numeric: ode2(ode_numeric, y, t)$
+sol_numeric_specific: ic1(sol_numeric, t=0, y=1)$
+print("解析解: ", sol_numeric_specific)$
+
+/* 绘制解析解 */
+wxplot2d(rhs(sol_numeric_specific), [t, 0, 10],
+         [title, "解析解: dy/dt = -2y + sin(t), y(0)=1"],
+         [xlabel, "t"], [ylabel, "y"])$
+
+print("")$
+print("")$
+
+/* 6. 参数分析 */
+print("6. 参数分析")$
+print("-----------")$
+
+/* 研究参数对方程解的影响 */
+/* 考虑方程: dy/dx = k*y */
+print("研究 dy/dx = k*y 的解")$
+
+/* 对不同的k值绘制解曲线 */
+wxplot2d([exp(x), exp(2*x), exp(0.5*x), exp(-x)], [x, -2, 2],
+         [title, "dy/dx = k*y 的解"],
+         [legend, "k=1", "k=2", "k=0.5", "k=-1"],
+         [xlabel, "x"], [ylabel, "y"])$
+
+print("")$
+print("=== 一阶ODE示例完成 ===")$

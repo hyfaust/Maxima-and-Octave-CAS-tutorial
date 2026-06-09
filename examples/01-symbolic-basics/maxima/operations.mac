@@ -1,0 +1,125 @@
+/* Basic Algebraic Operations for Maxima */
+/* 鍩烘湰浠ｆ暟杩愮畻绀轰緥 - 閫傜敤浜嶮axima */
+/* 鏈枃浠舵紨绀虹鍙疯绠椾腑鐨勫熀鏈唬鏁拌繍绠?*/
+/* 浣滆€? CAS Learn Tutorial */
+/* 鏃ユ湡: 2026-06-05 */
+
+/* 瀹氫箟绗﹀彿鍙橀噺 */
+
+/* 1. 琛ㄨ揪寮忓睍寮€ (Expand) */
+/* 灞曞紑澶氶」寮?*/
+expr1: (x + 1)^3;
+expanded1: expand(expr1);
+printf(true, "鍘熷琛ㄨ揪寮? ~a~%", expr1);
+printf(true, "灞曞紑鍚? ~a~%", expanded1);
+
+/* 灞曞紑涓夎鍑芥暟琛ㄨ揪寮?*/
+expr2: sin(x + y);
+expanded2: expand(expr2);
+printf(true, "~%涓夎鍑芥暟灞曞紑:~%");
+printf(true, "sin(x+y) = ~a~%", expanded2);
+
+/* 灞曞紑鎸囨暟琛ㄨ揪寮?*/
+expr3: exp(x + y);
+expanded3: expand(expr3);
+printf(true, "~%鎸囨暟鍑芥暟灞曞紑:~%");
+printf(true, "e^(x+y) = ~a~%", expanded3);
+
+/* 2. 琛ㄨ揪寮忓洜寮忓垎瑙?(Factor) */
+/* 鍥犲紡鍒嗚В澶氶」寮?*/
+poly1: x^3 - 8;
+factored1: factor(poly1);
+printf(true, "~%澶氶」寮忓洜寮忓垎瑙?~%");
+printf(true, "x鲁 - 8 = ~a~%", factored1);
+
+/* 鍥犲紡鍒嗚В浜屾澶氶」寮?*/
+poly2: x^2 - 5*x + 6;
+factored2: factor(poly2);
+printf(true, "x虏 - 5x + 6 = ~a~%", factored2);
+
+/* 鍥犲紡鍒嗚В楂樻澶氶」寮?*/
+poly3: x^4 - 16;
+factored3: factor(poly3);
+printf(true, "x鈦?- 16 = ~a~%", factored3);
+
+/* 3. 琛ㄨ揪寮忓寲绠€ (Simplify) */
+/* 鍖栫畝涓夎鍑芥暟琛ㄨ揪寮?*/
+trig_expr: sin(x)^2 + cos(x)^2;
+simplified1: trigexpand(trig_expr);
+simplified1: trigsimp(trig_expr);
+printf(true, "~%涓夎鍑芥暟鍖栫畝:~%");
+printf(true, "sin虏(x) + cos虏(x) = ~a~%", simplified1);
+
+/* 鍖栫畝鏈夌悊鍑芥暟 */
+rational_expr: (x^2 - 1)/(x - 1);
+simplified2: ratsimp(rational_expr);
+printf(true, "(x虏 - 1)/(x - 1) = ~a~%", simplified2);
+
+/* 鍖栫畝鎸囨暟琛ㄨ揪寮?*/
+exp_expr: exp(x) * exp(y);
+simplified3: ratsimp(exp_expr);
+printf(true, "e^x * e^y = ~a~%", simplified3);
+
+/* 4. 琛ㄨ揪寮忓悎骞跺悓绫婚」 (Collect) */
+/* 鎸夋寚瀹氬彉閲忓悎骞跺悓绫婚」 */
+poly_expr: a*x^2 + b*x + c + 2*x^2 + 3*x;
+collected: collectterms(poly_expr, x);
+printf(true, "~%鍚堝苟鍚岀被椤?~%");
+printf(true, "鍘熷紡: ~a~%", poly_expr);
+printf(true, "鎸墄鍚堝苟: ~a~%", collected);
+
+/* 5. 琛ㄨ揪寮忛噸鍐?(Rewrite) */
+/* 灏嗕笁瑙掑嚱鏁伴噸鍐欎负鎸囨暟褰㈠紡 */
+sin_exp: exponentialize(sin(x));
+cos_exp: exponentialize(cos(x));
+printf(true, "~%涓夎鍑芥暟閲嶅啓涓烘寚鏁板舰寮?~%");
+printf(true, "sin(x) = ~a~%", sin_exp);
+printf(true, "cos(x) = ~a~%", cos_exp);
+
+/* 6. 浠ｅ叆杩愮畻 (Substitute) */
+/* 绠€鍗曚唬鍏?*/
+expr: x^2 + 2*x + 1;
+result1: subst(x=3, expr);
+printf(true, "~%浠ｅ叆杩愮畻:~%");
+printf(true, "褰搙=3鏃讹紝x虏 + 2x + 1 = ~a~%", result1);
+
+/* 澶氬彉閲忎唬鍏?*/
+expr2: x*y + x^2;
+result2: subst([x=2, y=3], expr2);
+printf(true, "褰搙=2, y=3鏃讹紝xy + x虏 = ~a~%", result2);
+
+/* 绗﹀彿浠ｅ叆 */
+result3: subst(x=y+1, expr);
+printf(true, "灏唜鏇挎崲涓簓+1: ~a~%", result3);
+
+/* 7. 灞曞紑涓庡洜寮忓垎瑙ｇ殑瀵规瘮 */
+printf(true, "~%=== 灞曞紑涓庡洜寮忓垎瑙ｅ姣?===~%");
+test_expr: (x - 1)*(x + 1)*(x^2 + 1);
+printf(true, "鍘熷琛ㄨ揪寮? ~a~%", test_expr);
+printf(true, "灞曞紑鍚? ~a~%", expand(test_expr));
+printf(true, "鍥犲紡鍒嗚В: ~a~%", factor(expand(test_expr)));
+
+/* 8. 澶嶆潅琛ㄨ揪寮忓鐞?*/
+/* 鐗╃悊瀛︿腑鐨勫疄闄呬緥瀛愶細鐩稿璁鸿川閲忓叕寮?*/
+/* m = m0 / sqrt(1 - v虏/c虏) */
+relativistic_mass: m0 / sqrt(1 - v^2/c^2);
+printf(true, "~%=== 鐗╃悊瀛︿緥瀛愶細鐩稿璁鸿川閲?===~%");
+printf(true, "鐩稿璁鸿川閲忓叕寮? ~a~%", relativistic_mass);
+
+/* 褰搗杩滃皬浜巆鏃剁殑杩戜技灞曞紑锛堟嘲鍕掑睍寮€锛?*/
+approx_mass: taylor(relativistic_mass, v, 0, 3);
+printf(true, "浣庨€熻繎浼?(v << c): ~a~%", approx_mass);
+
+/* 9. 宸ョ▼搴旂敤锛氱數璺樆鎶楄绠?*/
+/* RLC涓茶仈鐢佃矾鐨勯樆鎶?*/
+Z_R: R;
+Z_L: %i*omega*L;
+Z_C: 1/(%i*omega*C);
+Z_total: Z_R + Z_L + Z_C;
+Z_simplified: ratsimp(Z_total);
+
+printf(true, "~%=== 宸ョ▼渚嬪瓙锛歊LC鐢佃矾闃绘姉 ===~%");
+printf(true, "鎬婚樆鎶?Z = ~a~%", Z_simplified);
+printf(true, "闃绘姉妯?|Z| = ~a~%", ratsimp(abs(Z_simplified)));
+
+printf(true, "~%鍩烘湰浠ｆ暟杩愮畻绀轰緥瀹屾垚锛亊%");

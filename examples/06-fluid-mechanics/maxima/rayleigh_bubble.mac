@@ -1,0 +1,130 @@
+/* Rayleigh Cavitation Bubble Problem - Maxima Implementation */
+/* 瑞利空化泡问题 - Maxima实现 */
+/*
+ * 物理背景：不可压缩流体中突然出现一个球形空泡的瞬态问题
+ * 控制方程：Rayleigh-Plesset方程
+ *   R*R'' + (3/2)*(R')^2 = (p_v - p_inf) / rho
+ *
+ * 作者: CAS Learn Tutorial
+ */
+
+/* 1. 符号推导Rayleigh-Plesset方程 */
+printf(true, "=== Rayleigh-Plesset方程符号推导 ===~%~%");
+
+/* 定义符号变量 */
+assume(rho > 0);
+assume(R0 > 0);
+
+/* 从连续性方程出发：不可压缩球对称流动 */
+/* v_r(r,t) = R^2 * diff(R,t) / r^2 */
+/* 其中R(t)是空泡半径 */
+
+/* Rayleigh-Plesset方程 */
+R_P_eq: 'diff(R, t, 2) * R + (3/2) * 'diff(R, t)^2 = (p_v - p_inf) / rho;
+
+printf(true, "Rayleigh-Plesset方程:~%");
+printf(true, "  R·R'' + (3/2)·(R')² = (p_v - p_∞)/ρ~%~%");
+
+/* 2. 无量纲化 */
+printf(true, "=== 无量纲化 ===~%");
+
+/* 引入无量纲变量 */
+/* R* = R/R0,  t* = t/T,  T = R0 * sqrt(rho/(p_inf - p_v)) */
+printf(true, "特征时间: T = R₀·√(ρ/(p_∞-p_v))~%");
+printf(true, "无量纲方程: R*·R*'' + (3/2)·(R*')² = -1~%");
+printf(true, "初始条件: R*(0) = 1,  R*'(0) = 0~%~%");
+
+/* 3. 求解简化情况 - 假设R为常数的近似 */
+printf(true, "=== 近似分析 ===~%~%");
+
+/* 当R ≈ R0（小扰动近似）时，令 R = R0 + ε*u(t) */
+/* 线性化得到：R0*u'' = (p_v - p_inf)/(rho*R0) */
+/* 即 u'' = -(p_inf - p_v)/(rho*R0^2) */
+
+/* 定义角频率 */
+omega_sq: (p_inf - p_v) / (rho * R0^2);
+printf(true, "小扰动固有频率平方: ω² = (p_∞-p_v)/(ρ·R₀²)~%");
+printf(true, "固有频率: ω = √((p_∞-p_v)/(ρ·R₀²))~%~%");
+
+/* 4. 级数解分析 */
+printf(true, "=== 级数解分析 ===~%~%");
+
+/* 假设 R*(t*) = 1 + a2*t*^2 + a4*t*^4 + ... */
+/* 代入无量纲方程，比较系数 */
+/* t*^0: 1·0 + 0 = -1  (矛盾，说明R不能为常数) */
+
+/* 实际上，由初始条件 R*(0)=1, R*'(0)=0 */
+/* 展开到二阶：R* ≈ 1 - t*^2/2 */
+/* 展开到四阶：R* ≈ 1 - t*^2/2 - t*^4/16 */
+
+printf(true, "二阶近似: R* ≈ 1 - t*²/2~%");
+printf(true, "四阶近似: R* ≈ 1 - t*²/2 - t*⁴/16~%~%");
+
+/* 5. Rayleigh溃灭时间 */
+printf(true, "=== Rayleigh溃灭时间 ===~%~%");
+
+/* 数值积分给出 t*_c ≈ 0.91468 */
+t_c: 0.91468;
+printf(true, "无量纲溃灭时间: t*_c ≈ 0.91468~%");
+
+/* 物理溃灭时间 */
+t_c_physical: t_c * R0 * sqrt(rho / (p_inf - p_v));
+printf(true, "物理溃灭时间: t_c = 0.91468·R₀·√(ρ/(p_∞-p_v))~%~%");
+
+/* 6. 渐近行为 */
+printf(true, "=== 渐近行为 ===~%~%");
+printf(true, "当 R* → 0 时（接近溃灭）:~%");
+printf(true, "  R* ~~ (t*_c - t*)^(2/5)~%");
+printf(true, "  dR*/dt* ~~ -(2/5)·(t*_c - t*)^(-3/5) → -∞~%");
+printf(true, "  即溃灭速度趋于无穷（物理奇异性）~%~%");
+
+/* 7. 具体物理参数计算 */
+printf(true, "=== 物理参数示例 ===~%~%");
+
+/* 典型参数 */
+R0_val: 1e-3;        /* 初始半径 1mm */
+rho_val: 1000;       /* 水的密度 kg/m³ */
+p_inf_val: 1e5;      /* 大气压力 Pa */
+p_v_val: 2337;       /* 水在20°C的蒸汽压 Pa */
+
+/* 特征时间 */
+T_char: R0_val * sqrt(rho_val / (p_inf_val - p_v_val));
+t_c_val: t_c * T_char;
+
+printf(true, "初始半径 R₀ = 1e-3 m~%");
+printf(true, "流体密度 ρ = 1000 kg/m³~%");
+printf(true, "远场压力 p_∞ = 1e5 Pa~%");
+printf(true, "蒸汽压力 p_v = 2337 Pa~%");
+printf(true, "特征时间 T = %.4e s~%", T_char);
+printf(true, "溃灭时间 t_c ≈ %.4e s~%~%", t_c_val);
+
+/* 8. 变参数分析：不同初始半径 */
+printf(true, "=== 变参数分析：初始半径影响 ===~%~%");
+
+/* 对于不同R0值 */
+R0_values: [1e-4, 5e-4, 1e-3, 5e-3, 1e-2];
+printf(true, "R0 (m)    | T_char (s)  | t_c (s)~%");
+printf(true, "----------|-------------|----------~%");
+for R0_i in R0_values do block(
+  T_i: R0_i * sqrt(rho_val / (p_inf_val - p_v_val)),
+  tc_i: t_c * T_i,
+  printf(true, "%.1e    | %.4e  | %.4e~%", R0_i, T_i, tc_i)
+);
+
+/* 9. 考虑表面张力的修正 */
+printf(true, "~%=== 考虑表面张力的修正 ===~%~%");
+
+/* 修正的Rayleigh-Plesset方程 */
+R_P_eq_modified: 'diff(R, t, 2) * R + (3/2) * 'diff(R, t)^2 = 
+  (p_v - p_inf) / rho + 2 * sigma / (rho * R);
+
+printf(true, "修正方程（含表面张力）:~%");
+printf(true, "  R·R'' + (3/2)·(R')² = (p_v - p_∞)/ρ + 2σ/(ρR)~%~%");
+
+/* 表面张力效应：对于小空泡更重要 */
+printf(true, "当 R₀ 很小时，表面张力项 2σ/(ρR) 显著~%");
+printf(true, "临界半径: R_c = 2σ/(p_∞ - p_v)~%");
+R_c: 2 * 0.0728 / (p_inf_val - p_v_val);
+printf(true, "水的临界半径: R_c ≈ %.2e m = %.2f μm~%", R_c, R_c * 1e6);
+
+printf(true, "~%瑞利空化泡问题分析完成！~%");

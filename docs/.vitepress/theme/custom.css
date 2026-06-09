@@ -1,0 +1,206 @@
+/* KaTeX styles */
+.katex-block {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 1em 0;
+}
+
+.katex-error {
+  color: #f00;
+  font-family: monospace;
+  background: #fee;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+/* Math formula in text */
+.katex {
+  font-size: 1.1em;
+}
+
+/* Block math */
+.katex-display {
+  margin: 1em 0;
+  text-align: center;
+}
+
+.katex-display > .katex {
+  font-size: 1.2em;
+}
+
+/* Code comparison component styles */
+.code-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.code-comparison .code-block {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-comparison .code-block-header {
+  background: var(--vp-c-bg-soft);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.code-comparison .code-block-content {
+  padding: 1rem;
+  background: var(--vp-c-bg-alt);
+}
+
+/* Difficulty indicator */
+.difficulty-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+}
+
+.difficulty-indicator .star {
+  color: #ffd700;
+  font-size: 0.8em;
+}
+
+.difficulty-indicator .star.empty {
+  color: #ccc;
+}
+
+/* Concept tooltip */
+.concept-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted var(--vp-c-brand);
+  cursor: help;
+}
+
+.concept-tooltip .tooltip-content {
+  visibility: hidden;
+  width: 300px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  text-align: left;
+  border-radius: 6px;
+  padding: 1rem;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -150px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.concept-tooltip:hover .tooltip-content {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Progress tracking */
+.progress-tracker {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.progress-tracker h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.progress-tracker .progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--vp-c-divider);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-tracker .progress-fill {
+  height: 100%;
+  background: var(--vp-c-brand);
+  transition: width 0.3s;
+}
+
+/* Responsive design for code comparison */
+@media (max-width: 768px) {
+  .code-comparison {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Custom block styles for tips, warnings, etc */
+.custom-block.tip {
+  border-color: var(--vp-c-brand);
+}
+
+.custom-block.warning {
+  border-color: #e7c000;
+}
+
+.custom-block.danger {
+  border-color: #cc0000;
+}
+
+/* Code block enhancements */
+.vp-code-group .tabs label {
+  font-weight: 600;
+}
+
+/* Table styles for mathematical expressions */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+
+table th,
+table td {
+  border: 1px solid var(--vp-c-divider);
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+table th {
+  background: var(--vp-c-bg-soft);
+  font-weight: 600;
+}
+
+table tr:nth-child(even) {
+  background: var(--vp-c-bg-alt);
+}
+
+/* Animation for interactive elements */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Print styles */
+@media print {
+  .progress-tracker,
+  .code-comparison .code-block-header {
+    display: none;
+  }
+  
+  .katex-block {
+    page-break-inside: avoid;
+  }
+}

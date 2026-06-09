@@ -1,0 +1,149 @@
+/* limits.mac - 极限计算示例 */
+/* 本文件演示如何使用 Maxima 计算各种类型的极限 */
+
+/* 清除之前的定义 */
+kill(all)$
+
+/* 设置输出格式 */
+display2d: false$
+
+print("=== 极限计算示例 ===")$
+print("")$
+
+/* 1. 基本极限 */
+print("1. 基本极限计算")$
+
+/* 示例1：sin(x)/x 在 x->0 时的极限 */
+f1: sin(x)/x$
+lim1: limit(f1, x, 0)$
+print("lim(sin(x)/x, x->0) = ", lim1)$
+
+/* 示例2：(1+1/x)^x 在 x->inf 时的极限（自然对数的底 e） */
+f2: (1 + 1/x)^x$
+lim2: limit(f2, x, inf)$
+print("lim((1+1/x)^x, x->inf) = ", lim2)$
+
+/* 示例3：多项式极限 */
+f3: (x^2 - 1)/(x - 1)$
+lim3: limit(f3, x, 1)$
+print("lim((x^2-1)/(x-1), x->1) = ", lim3)$
+
+print("")$
+
+/* 2. 单侧极限 */
+print("2. 单侧极限计算")$
+
+/* 示例4：右极限 */
+f4: 1/x$
+lim4_right: limit(f4, x, 0, plus)$
+lim4_left: limit(f4, x, 0, minus)$
+print("lim(1/x, x->0+) = ", lim4_right)$
+print("lim(1/x, x->0-) = ", lim4_left)$
+
+/* 示例5：绝对值函数在 x=0 处的极限 */
+f5: abs(x)/x$
+lim5_right: limit(f5, x, 0, plus)$
+lim5_left: limit(f5, x, 0, minus)$
+print("lim(|x|/x, x->0+) = ", lim5_right)$
+print("lim(|x|/x, x->0-) = ", lim5_left)$
+
+print("")$
+
+/* 3. 无穷极限 */
+print("3. 无穷极限")$
+
+/* 示例6：无穷远处的极限 */
+f6: (3*x^2 + 2*x - 1)/(x^2 + 5)$
+lim6: limit(f6, x, inf)$
+print("lim((3x^2+2x-1)/(x^2+5), x->inf) = ", lim6)$
+
+/* 示例7：指数函数在无穷远处的极限 */
+f7: exp(-x)$
+lim7: limit(f7, x, inf)$
+print("lim(e^(-x), x->inf) = ", lim7)$
+
+/* 示例8：对数函数在无穷远处的极限 */
+f8: log(x)/x$
+lim8: limit(f8, x, inf)$
+print("lim(log(x)/x, x->inf) = ", lim8)$
+
+print("")$
+
+/* 4. 物理应用示例：瞬时速度 */
+print("4. 物理应用示例：瞬时速度")$
+
+/* 位置函数 s(t) = t^2 + 2*t（米） */
+s: t^2 + 2*t$
+
+/* 使用导数定义计算瞬时速度 */
+v: limit((subst(t+dt, t, s) - s)/dt, dt, 0)$
+print("位置函数 s(t) = ", s)$
+print("瞬时速度 v(t) = ", v)$
+
+/* 计算 t=3 秒时的速度 */
+v_at_3: subst(t=3, v)$
+print("v(3) = ", v_at_3, " m/s")$
+
+print("")$
+
+/* 5. 数值验证 */
+print("5. 数值验证")$
+
+/* 验证 sin(x)/x 在 x->0 时的极限 */
+x_values: [0.1, 0.01, 0.001, 0.0001]$
+print("验证 lim(sin(x)/x, x->0) = 1")$
+print("x值         | sin(x)/x     | 误差")$
+for x_val in x_values do (
+    approx: sin(x_val)/x_val,
+    err_val: abs(approx - 1),
+    printf(true, "%.4f      | %.10f | %.2e~%", x_val, approx, err_val)
+)$
+
+print("")$
+
+/* 6. 收敛性分析 */
+print("6. 收敛性分析")$
+
+/* 分析 (1+1/x)^x 收敛到 e 的过程 */
+print("分析 (1+1/x)^x 收敛到 e 的过程:")$
+x_values: [1, 10, 100, 1000, 10000]$
+exact_e: %e$
+print("x值    | (1+1/x)^x     | 误差")$
+for x_val in x_values do (
+    approx: (1 + 1/x_val)^x_val,
+    err_val: abs(approx - exact_e),
+    printf(true, "%-6d | %.10f | %.2e~%", x_val, approx, err_val)
+)$
+
+print("")$
+
+/* 7. 洛必达法则示例 */
+print("7. 洛必达法则示例")$
+
+/* 示例9：0/0 型极限 */
+f9: (sin(x))/x$
+lim9: limit(f9, x, 0)$
+print("lim(sin(x)/x, x->0) = ", lim9, " (0/0型)")$
+
+/* 示例10：∞/∞ 型极限 */
+f10: (x^2 + 1)/(x^3 + 2)$
+lim10: limit(f10, x, inf)$
+print("lim((x^2+1)/(x^3+2), x->inf) = ", lim10, " (∞/∞型)")$
+
+/* 示例11：0*∞ 型极限 */
+f11: x * exp(-x)$
+lim11: limit(f11, x, inf)$
+print("lim(x*e^(-x), x->inf) = ", lim11, " (0*∞型)")$
+
+print("")$
+
+/* 8. 练习 */
+print("8. 练习")$
+print("尝试计算以下极限:")$
+print("1. lim(x->0) (e^x - 1)/x")$
+print("2. lim(x->inf) (1 + 2/x)^x")$
+print("3. lim(x->1) (x^3 - 1)/(x - 1)")$
+print("4. lim(x->0+) x*ln(x)")$
+print("")$
+
+print("=== 极限计算示例结束 ===")$

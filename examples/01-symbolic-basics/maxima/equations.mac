@@ -1,0 +1,172 @@
+/* Equation Solving Examples for Maxima */
+/* 鏂圭▼姹傝В绀轰緥 - 閫傜敤浜嶮axima */
+/* 鏈枃浠舵紨绀哄浣曚娇鐢ㄧ鍙疯绠楁眰瑙ｅ悇绉嶇被鍨嬬殑鏂圭▼ */
+/* 浣滆€? CAS Learn Tutorial */
+/* 鏃ユ湡: 2026-06-05 */
+
+/* 瀹氫箟绗﹀彿鍙橀噺 */
+
+/* 1. 绾挎€ф柟绋嬫眰瑙?*/
+printf(true, "=== 绾挎€ф柟绋嬫眰瑙?===~%");
+
+/* 涓€鍏冧竴娆℃柟绋? 2x + 3 = 7 */
+eq1: 2*x + 3 = 7;
+sol1: solve(eq1, x);
+printf(true, "鏂圭▼ 2x + 3 = 7 鐨勮В: x = ~a~%", rhs(sol1[1]));
+
+/* 涓€鍏冧竴娆℃柟绋? ax + b = 0 */
+eq2: a*x + b = 0;
+sol2: solve(eq2, x);
+printf(true, "鏂圭▼ ax + b = 0 鐨勮В: x = ~a~%", rhs(sol2[1]));
+
+/* 2. 浜屾鏂圭▼姹傝В */
+printf(true, "~%=== 浜屾鏂圭▼姹傝В ===~%");
+
+/* 鏍囧噯浜屾鏂圭▼: ax虏 + bx + c = 0 */
+eq3: a*x^2 + b*x + c = 0;
+sol3: solve(eq3, x);
+printf(true, "浜屾鏂圭▼ ax虏 + bx + c = 0 鐨勮В:~%");
+printf(true, "x鈧?= ~a~%", rhs(sol3[1]));
+printf(true, "x鈧?= ~a~%", rhs(sol3[2]));
+
+/* 鍏蜂綋渚嬪瓙: x虏 - 5x + 6 = 0 */
+eq4: x^2 - 5*x + 6 = 0;
+sol4: solve(eq4, x);
+printf(true, "~%鍏蜂綋渚嬪瓙 x虏 - 5x + 6 = 0:~%");
+printf(true, "x鈧?= ~a, x鈧?= ~a~%", rhs(sol4[1]), rhs(sol4[2]));
+
+/* 鏈夊鏁拌В鐨勪緥瀛? x虏 + 1 = 0 */
+eq5: x^2 + 1 = 0;
+sol5: solve(eq5, x);
+printf(true, "~%澶嶆暟瑙ｄ緥瀛?x虏 + 1 = 0:~%");
+printf(true, "x鈧?= ~a, x鈧?= ~a~%", rhs(sol5[1]), rhs(sol5[2]));
+
+/* 3. 楂樻澶氶」寮忔柟绋?*/
+printf(true, "~%=== 楂樻澶氶」寮忔柟绋?===~%");
+
+/* 涓夋鏂圭▼: x鲁 - 6x虏 + 11x - 6 = 0 */
+eq6: x^3 - 6*x^2 + 11*x - 6 = 0;
+sol6: solve(eq6, x);
+printf(true, "涓夋鏂圭▼ x鲁 - 6x虏 + 11x - 6 = 0 鐨勮В:~%");
+for i:1 thru length(sol6) do (
+    printf(true, "x~d = ~a~%", i, rhs(sol6[i]))
+);
+
+/* 鍥涙鏂圭▼: x鈦?- 16 = 0 */
+eq7: x^4 - 16 = 0;
+sol7: solve(eq7, x);
+printf(true, "~%鍥涙鏂圭▼ x鈦?- 16 = 0 鐨勮В:~%");
+for i:1 thru length(sol7) do (
+    printf(true, "x~d = ~a~%", i, rhs(sol7[i]))
+);
+
+/* 4. 鏂圭▼缁勬眰瑙?*/
+printf(true, "~%=== 鏂圭▼缁勬眰瑙?===~%");
+
+/* 浜屽厓涓€娆℃柟绋嬬粍 */
+eq8: 2*x + y = 5;
+eq9: x - y = 1;
+sol_sys1: solve([eq8, eq9], [x, y]);
+printf(true, "鏂圭▼缁?~%");
+printf(true, "  2x + y = 5~%");
+printf(true, "  x - y = 1~%");
+printf(true, "瑙? x = ~a, y = ~a~%", 
+    rhs(sol_sys1[1][1]), rhs(sol_sys1[1][2]));
+
+/* 涓夊厓涓€娆℃柟绋嬬粍 */
+eq10: x + y + z = 6;
+eq11: 2*x - y + z = 3;
+eq12: x + 2*y - z = 2;
+sol_sys2: solve([eq10, eq11, eq12], [x, y, z]);
+printf(true, "~%涓夊厓涓€娆℃柟绋嬬粍:~%");
+printf(true, "  x + y + z = 6~%");
+printf(true, "  2x - y + z = 3~%");
+printf(true, "  x + 2y - z = 2~%");
+printf(true, "瑙? x = ~a, y = ~a, z = ~a~%", 
+    rhs(sol_sys2[1][1]), rhs(sol_sys2[1][2]), rhs(sol_sys2[1][3]));
+
+/* 5. 闈炵嚎鎬ф柟绋嬬粍 */
+printf(true, "~%=== 闈炵嚎鎬ф柟绋嬬粍 ===~%");
+
+/* 鍦嗕笌鐩寸嚎鐨勪氦鐐?*/
+circle_eq: x^2 + y^2 = 25;
+line_eq: x + y = 7;
+sol_inter: solve([circle_eq, line_eq], [x, y]);
+printf(true, "鍦?x虏 + y虏 = 25 涓庣洿绾?x + y = 7 鐨勪氦鐐?~%");
+for i:1 thru length(sol_inter) do (
+    printf(true, "鐐箏d: (~a, ~a)~%", i, 
+        rhs(sol_inter[i][1]), rhs(sol_inter[i][2]))
+);
+
+/* 6. 涓嶇瓑寮忔眰瑙?*/
+printf(true, "~%=== 涓嶇瓑寮忔眰瑙?===~%");
+
+/* 绠€鍗曚笉绛夊紡 - 浣跨敤 ineq 涔呭寘 */
+load(ineq);
+ineq1: x^2 - 4 > 0;
+sol_ineq1: solve_ineq(ineq1, x);
+printf(true, "涓嶇瓑寮?x虏 - 4 > 0 鐨勮В闆? ~a~%", sol_ineq1);
+
+/* 7. 鍚弬鏁扮殑鏂圭▼姹傝В */
+printf(true, "~%=== 鍚弬鏁扮殑鏂圭▼姹傝В ===~%");
+
+/* 涓€鍏冧簩娆℃柟绋嬪垽鍒紡 */
+disc_eq: a*x^2 + b*x + c = 0;
+disc_sol: solve(disc_eq, x);
+discriminant: b^2 - 4*a*c;
+printf(true, "涓€鍏冧簩娆℃柟绋?ax虏 + bx + c = 0:~%");
+printf(true, "瑙? x = ~a~%", rhs(disc_sol[1]));
+printf(true, "鍒ゅ埆寮?螖 = ~a~%", discriminant);
+
+/* 8. 鐗╃悊瀛﹀簲鐢細杩愬姩鏂圭▼ */
+printf(true, "~%=== 鐗╃悊瀛﹀簲鐢細杩愬姩鏂圭▼ ===~%");
+
+/* 鑷敱钀戒綋杩愬姩锛歨 = h0 + v0*t - (1/2)*g*t^2 */
+h: h0 + v0*t - (1/2)*g*t^2;
+
+/* 姹傝惤鍦版椂闂?(h = 0) */
+land_time: solve(h = 0, t);
+printf(true, "鑷敱钀戒綋杩愬姩鏂圭▼: h = ~a~%", h);
+printf(true, "钀藉湴鏃堕棿 (h=0): t = ~a~%", rhs(land_time[1]));
+
+/* 鍏蜂綋鏁板€硷細h0=100m, v0=0, g=9.8m/s虏 */
+h_specific: 100 + 0*t - 4.9*t^2;
+t_land: solve(h_specific = 0, t);
+/* 閫夋嫨姝ｆ牴 */
+t_land_positive: rhs(t_land[2]);
+printf(true, "鍏蜂綋渚嬪瓙 (h0=100m, v0=0, g=9.8): 钀藉湴鏃堕棿 t = ~a 绉拁%", 
+    float(t_land_positive));
+
+/* 9. 宸ョ▼搴旂敤锛氱數璺垎鏋?*/
+printf(true, "~%=== 宸ョ▼搴旂敤锛氱數璺垎鏋?===~%");
+
+/* 鍩哄皵闇嶅か鐢靛帇瀹氬緥 (KVL) 姹傝В鐢佃矾 */
+
+/* 涓や釜缃戝瓟鐨勭數璺柟绋?*/
+kvl1: R1*I1 + R3*(I1 - I2) = V;
+kvl2: R2*I2 + R3*(I2 - I1) = 0;
+
+circuit_sol: solve([kvl1, kvl2], [I1, I2]);
+printf(true, "鐢佃矾鏂圭▼姹傝В:~%");
+printf(true, "I1 = ~a~%", rhs(circuit_sol[1][1]));
+printf(true, "I2 = ~a~%", rhs(circuit_sol[1][2]));
+
+/* 鍏蜂綋鏁板€硷細R1=10惟, R2=20惟, R3=30惟, V=12V */
+I1_val: subst([R1=10, R2=20, R3=30, V=12], rhs(circuit_sol[1][1]));
+I2_val: subst([R1=10, R2=20, R3=30, V=12], rhs(circuit_sol[1][2]));
+printf(true, "鍏蜂綋鏁板€?(R1=10惟, R2=20惟, R3=30惟, V=12V):~%");
+printf(true, "I1 = ~a A, I2 = ~a A~%", float(I1_val), float(I2_val));
+
+/* 10. 鏁板€兼眰瑙ｄ笌绗﹀彿姹傝В瀵规瘮 */
+printf(true, "~%=== 鏁板€兼眰瑙ｄ笌绗﹀彿姹傝В瀵规瘮 ===~%");
+
+/* 绗﹀彿姹傝В */
+eq_numeric: x^3 - 2*x - 5 = 0;
+sol_symbolic: solve(eq_numeric, x);
+printf(true, "绗﹀彿瑙? ~a~%", rhs(sol_symbolic[1]));
+
+/* 鏁板€兼眰瑙?*/
+sol_numeric: find_root(x^3 - 2*x - 5, x, 2, 3);
+printf(true, "鏁板€艰В: ~a~%", sol_numeric);
+
+printf(true, "~%鏂圭▼姹傝В绀轰緥瀹屾垚锛亊%");

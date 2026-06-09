@@ -1,0 +1,475 @@
+/* 第4章：偏微分方程基础 */
+/* 本文件演示如何使用Maxima求解偏微分方程(PDE) */
+/* 包括：PDE分类、分离变量法、热传导方程、波动方程等 */
+
+/* 禁用2D显示以便于阅读 */
+display2d: false$
+
+printf(true, "=== 偏微分方程(PDE)基础示例 ===~%~%")$
+
+/* ============================================================
+   1. PDE 分类
+   ============================================================ */
+/* 一般二阶线性PDE:
+   A*u_xx + B*u_xy + C*u_yy + D*u_x + E*u_y + F*u = G
+   判别式 Delta = B^2 - 4*A*C
+     Delta < 0 : 椭圆型 (如 Laplace 方程)
+     Delta = 0 : 抛物型 (如 热传导方程)
+     Delta > 0 : 双曲型 (如 波动方程)                           */
+
+printf(true, "--- 1. PDE 分类 ---~%")$
+
+/* 定义判别式函数 */
+classify_pde(A, B, C) :=
+    block([delta: B^2 - 4*A*C],
+        if delta < 0 then "elliptic"
+        elseif delta = 0 then "parabolic"
+        else "hyperbolic"
+    )$
+
+/* Laplace 方程: u_xx + u_yy = 0  =>  A=1, B=0, C=1 */
+printf(true, "Laplace 方程 u_xx + u_yy = 0:  A=1, B=0, C=1~%")$
+printf(true, "  判别式 B^2-4AC = ~a~%", 0^2 - 4*1*1)$
+printf(true, "  类型: ~a~%~%", classify_pde(1, 0, 1))$
+
+/* 热传导方程: u_t - k*u_xx = 0  =>  A=k, B=0, C=0 (关于 x,t) */
+printf(true, "热传导方程 u_t - k*u_xx = 0:  A=k, B=0, C=0~%")$
+printf(true, "  判别式 B^2-4AC = 0~%")$
+printf(true, "  类型: ~a~%~%", classify_pde(1, 0, 0))$
+
+/* 波动方程: u_tt - c^2*u_xx = 0  =>  A=-c^2, B=0, C=1 (关于 x,t) */
+/* 整理为标准形式: c^2*u_xx - u_tt = 0,  A=c^2, B=0, C=-1       */
+printf(true, "波动方程 u_tt - c^2*u_xx = 0:  A=c^2, B=0, C=-1~%")$
+printf(true, "  判别式 B^2-4AC = 4c^2 > 0~%")$
+printf(true, "  类型: ~a~%~%", classify_pde(1, 0, -1))$
+
+/* 一般分类演示 */
+printf(true, "一般 PDE 分类表:~%")$
+printf(true, "  A=1, B=3, C=2 => Delta=9-8=1  => ~a~%", classify_pde(1, 3, 2))$
+printf(true, "  A=1, B=2, C=1 => Delta=4-4=0  => ~a~%", classify_pde(1, 2, 1))$
+printf(true, "  A=1, B=0, C=1 => Delta=0-4=-4 => ~a~%~%", classify_pde(1, 0, 1))$
+
+/* ============================================================
+   2. 分离变量法：基本思想
+   ============================================================ */
+/* 分离变量法假设解可以写成 u(x,t) = X(x)*T(t)
+   将PDE转化为两个ODE分别求解                                */
+
+printf(true, "--- 2. 分离变量法基本思想 ---~%~%")$
+
+/* 示例：对 Laplace 方程 u_xx + u_yy = 0 进行分离变量 */
+/* 设 u(x,y) = X(x)*Y(y)，代入得:
+   X''*Y + X*Y'' = 0
+   X''/X = -Y''/Y = -lambda  (分离常数)
+   得到两个ODE:
+     X'' + lambda*X = 0
+     Y'' - lambda*Y = 0                                      */
+
+printf(true, "Laplace 方程分离变量:~%")$
+printf(true, "  设 u(x,y) = X(x)*Y(y)~%")$
+printf(true, "  => X''/X = -Y''/Y = -lambda~%")$
+printf(true, "  ODE 1: X'' + lambda*X = 0~%")$
+printf(true, "  ODE 2: Y'' - lambda*Y = 0~%~%")$
+
+/* 求解 ODE 1: X'' + lambda*X = 0 */
+assume(lambda > 0)$
+
+syms_x: 'diff(X, x, 2) + lambda * X = 0$
+sol_X: ode2(syms_x, X, x)$
+printf(true, "X'' + lambda*X = 0 的通解: ~a~%~%", sol_X)$
+
+/* 求解 ODE 2: Y'' - lambda*Y = 0 */
+syms_y: 'diff(Y, y, 2) - lambda * Y = 0$
+sol_Y: ode2(syms_y, Y, y)$
+printf(true, "Y'' - lambda*Y = 0 的通解: ~a~%~%", sol_Y)$
+
+/* ============================================================
+   3. 一维热传导方程
+   ============================================================ */
+/* u_t = k * u_xx,  0 < x < L, t > 0
+   边界条件: u(0,t) = 0, u(L,t) = 0
+   初始条件: u(x,0) = f(x)
+   解: u(x,t) = sum( B_n * sin(n*pi*x/L) * exp(-k*(n*pi/L)^2*t) )
+   其中 B_n = (2/L) * integral(f(x)*sin(n*pi*x/L), x, 0, L)     */
+
+printf(true, "--- 3. 一维热传导方程 ---~%~%")$
+
+printf(true, "热传导方程: u_t = k * u_xx~%")$
+printf(true, "边界条件: u(0,t) = 0, u(L,t) = 0~%")$
+printf(true, "初始条件: u(x,0) = f(x)~%~%")$
+
+/* 分离变量: u(x,t) = X(x)*T(t)
+   => X*T' = k*X''*T
+   => T'/(k*T) = X''/X = -lambda
+   得:
+     X'' + lambda*X = 0,  X(0)=0, X(L)=0  (Sturm-Liouville 问题)
+     T' + k*lambda*T = 0                                              */
+
+printf(true, "分离变量后:~%")$
+printf(true, "  空间ODE: X'' + lambda*X = 0, X(0)=0, X(L)=0~%")$
+printf(true, "  时间ODE: T' + k*lambda*T = 0~%~%")$
+
+/* 空间ODE的解（带边界条件） */
+/* X(0) = 0 => C2 = 0 (若 lambda > 0, X = C1*cos + C2*sin)
+   X(L) = 0 => sin(sqrt(lambda)*L) = 0
+   => sqrt(lambda)*L = n*pi => lambda_n = (n*pi/L)^2
+   => X_n(x) = sin(n*pi*x/L)                                      */
+
+printf(true, "空间ODE求解:~%")$
+printf(true, "  X(0)=0 => X_n(x) = sin(n*pi*x/L)~%")$
+printf(true, "  特征值: lambda_n = (n*pi/L)^2, n=1,2,3,...~%~%")$
+
+/* 时间ODE的解 */
+ode_T: 'diff(T, t) + k * lambda_n * T = 0$
+sol_T: ode2(ode_T, T, t)$
+printf(true, "时间ODE: T' + k*lambda_n*T = 0~%")$
+printf(true, "  通解: ~a~%", sol_T)$
+printf(true, "  即 T_n(t) = exp(-k*(n*pi/L)^2*t)~%~%")$
+
+/* 完整解 */
+printf(true, "热传导方程的解:~%")$
+printf(true, "  u(x,t) = sum_{n=1}^{inf} B_n * sin(n*pi*x/L) * exp(-k*(n*pi/L)^2*t)~%")$
+printf(true, "  其中 B_n = (2/L) * integral_0^L f(x)*sin(n*pi*x/L) dx~%~%")$
+
+/* 计算傅里叶系数 B_n 的示例 */
+/* 取 f(x) = x*(L-x), L=1 */
+printf(true, "示例: f(x) = x*(1-x), L=1~%")$
+L_val: 1$
+f_init: x * (1 - x)$
+
+/* 计算前几个 B_n */
+for n: 1 thru 5 do block(
+    integrand: f_init * sin(n * %pi * x / L_val),
+    Bn: (2/L_val) * integrate(integrand, x, 0, L_val),
+    Bn: expand(Bn),
+    printf(true, "  B_~a = ~a~%", n, Bn)
+)$
+
+printf(true, "~%")$
+
+/* 验证: B_n 对于偶数 n 应该为 0（因为初始条件关于 x=0.5 对称时，
+   奇数项才非零 —— 实际上 x(1-x) 是对称的，
+   所有 sin(n*pi*x) 在 [0,1] 上，
+   奇偶性取决于 n）                                              */
+
+/* ============================================================
+   4. 一维波动方程
+   ============================================================ */
+/* u_tt = c^2 * u_xx,  0 < x < L, t > 0
+   边界条件: u(0,t) = 0, u(L,t) = 0
+   初始条件: u(x,0) = f(x), u_t(x,0) = g(x)
+   解: u(x,t) = sum sin(n*pi*x/L) * [A_n*cos(omega_n*t) + B_n*sin(omega_n*t)]
+   其中 omega_n = n*pi*c/L                                      */
+
+printf(true, "--- 4. 一维波动方程 ---~%~%")$
+
+printf(true, "波动方程: u_tt = c^2 * u_xx~%")$
+printf(true, "边界条件: u(0,t) = 0, u(L,t) = 0~%")$
+printf(true, "初始条件: u(x,0) = f(x), u_t(x,0) = g(x)~%~%")$
+
+/* 分离变量: u(x,t) = X(x)*T(t)
+   => X*T'' = c^2*X''*T
+   => T''/(c^2*T) = X''/X = -lambda
+   得:
+     X'' + lambda*X = 0,  X(0)=0, X(L)=0
+     T'' + c^2*lambda*T = 0                                      */
+
+printf(true, "分离变量后:~%")$
+printf(true, "  空间ODE: X'' + lambda*X = 0, X(0)=0, X(L)=0~%")$
+printf(true, "  时间ODE: T'' + c^2*lambda*T = 0~%~%")$
+
+/* 时间ODE的求解 */
+assume(c > 0)$
+assume(lambda_n > 0)$
+assume(n > 0)$
+assume(a > 0)$
+assume(b > 0)$
+ode_wave_T: 'diff(T, t, 2) + c^2 * lambda_n * T = 0$
+sol_wave_T: ode2(ode_wave_T, T, t)$
+printf(true, "时间ODE T'' + c^2*lambda_n*T = 0 的通解:~%")$
+printf(true, "  ~a~%", sol_wave_T)$
+printf(true, "  即 T_n(t) = A_n*cos(n*pi*c*t/L) + B_n*sin(n*pi*c*t/L)~%~%")$
+
+/* 完整解 */
+printf(true, "波动方程的解:~%")$
+printf(true, "  u(x,t) = sum_{n=1}^{inf} sin(n*pi*x/L) * [A_n*cos(omega_n*t) + B_n*sin(omega_n*t)]~%")$
+printf(true, "  其中 omega_n = n*pi*c/L (角频率)~%")$
+printf(true, "  A_n = (2/L) * integral_0^L f(x)*sin(n*pi*x/L) dx~%")$
+printf(true, "  B_n = (2/(n*pi*c)) * integral_0^L g(x)*sin(n*pi*x/L) dx~%~%")$
+
+/* 示例: 弦振动，f(x) = sin(pi*x), g(x) = 0, L=1, c=1 */
+printf(true, "示例: 弦振动~%")$
+printf(true, "  f(x) = sin(pi*x), g(x) = 0, L=1, c=1~%")$
+printf(true, "  此时只有 n=1 项非零:~%")$
+printf(true, "  u(x,t) = sin(pi*x)*cos(pi*t)~%")$
+printf(true, "  这是一个驻波，频率 f_1 = c/(2L) = 0.5 Hz~%~%")$
+
+/* 示例: 拨弦问题，f(x) = 三角形脉冲 */
+printf(true, "示例: 拨弦问题 (三角形初始位移)~%")$
+printf(true, "  f(x) = { 2h*x/L,        0 <= x <= L/2 ~%")$
+printf(true, "         { 2h*(L-x)/L,    L/2 <= x <= L ~%")$
+printf(true, "  g(x) = 0~%~%")$
+
+/* 计算傅里叶系数 */
+L_val: 1$
+h_val: 1$
+
+/* 分段函数 */
+f_tri_left: 2*h_val*x/L_val$     /* 0 <= x <= L/2 */
+f_tri_right: 2*h_val*(L_val - x)/L_val$  /* L/2 <= x <= L */
+
+printf(true, "计算前5个傅里叶系数 A_n:~%")$
+for n: 1 thru 5 do block(
+    integrand_left: f_tri_left * sin(n * %pi * x / L_val),
+    integrand_right: f_tri_right * sin(n * %pi * x / L_val),
+    An: (2/L_val) * (
+        integrate(integrand_left, x, 0, L_val/2) +
+        integrate(integrand_right, x, L_val/2, L_val)
+    ),
+    An: expand(An),
+    An: ratsimp(An),
+    printf(true, "  A_~a = ~a~%", n, An)
+)$
+
+printf(true, "~%")$
+
+/* ============================================================
+   5. 二维 Laplace 方程（矩形区域）
+   ============================================================ */
+/* u_xx + u_yy = 0,  0 < x < a, 0 < y < b
+   边界条件:
+     u(0,y) = 0, u(a,y) = 0
+     u(x,0) = 0, u(x,b) = f(x)
+   解: u(x,y) = sum B_n * sin(n*pi*x/a) * sinh(n*pi*y/a)         */
+
+printf(true, "--- 5. 二维 Laplace 方程（矩形区域）---~%~%")$
+
+printf(true, "Laplace 方程: u_xx + u_yy = 0~%")$
+printf(true, "区域: 0 < x < a, 0 < y < b~%")$
+printf(true, "边界条件:~%")$
+printf(true, "  u(0,y) = 0, u(a,y) = 0~%")$
+printf(true, "  u(x,0) = 0, u(x,b) = f(x)~%~%")$
+
+/* 分离变量: u(x,y) = X(x)*Y(y)
+   X''/X = -Y''/Y = -lambda
+   X'' + lambda*X = 0, X(0)=0, X(a)=0  => X_n = sin(n*pi*x/a)
+   Y'' - lambda*Y = 0, Y(0)=0          => Y_n = sinh(n*pi*y/a)   */
+
+/* 求解 Y 方程 */
+ode_Y_laplace: 'diff(Y, y, 2) - (n*%pi/a)^2 * Y = 0$
+sol_Y_laplace: ode2(ode_Y_laplace, Y, y)$
+printf(true, "Y'' - (n*pi/a)^2*Y = 0 的通解:~%")$
+printf(true, "  ~a~%", sol_Y_laplace)$
+printf(true, "  由 Y(0)=0 => Y_n(y) = sinh(n*pi*y/a)~%~%")$
+
+printf(true, "Laplace 方程的解:~%")$
+printf(true, "  u(x,y) = sum_{n=1}^{inf} B_n * sin(n*pi*x/a) * sinh(n*pi*y/a)~%")$
+printf(true, "  其中 B_n = (2/(a*sinh(n*pi*b/a))) * integral_0^a f(x)*sin(n*pi*x/a) dx~%~%")$
+
+/* ============================================================
+   6. 极坐标下的 Laplace 方程（圆形区域）
+   ============================================================ */
+/* u_rr + (1/r)*u_r + (1/r^2)*u_theta_theta = 0
+   解（圆内，有界）:
+     u(r,theta) = a0/2 + sum r^n * (a_n*cos(n*theta) + b_n*sin(n*theta))
+   其中系数由边界条件 u(R,theta) = f(theta) 确定                   */
+
+printf(true, "--- 6. 极坐标下的 Laplace 方程 ---~%~%")$
+
+printf(true, "极坐标 Laplace 方程:~%")$
+printf(true, "  u_rr + (1/r)*u_r + (1/r^2)*u_tt = 0~%")$
+printf(true, "  (t 代表 theta)~%~%")$
+
+/* 分离变量: u(r,theta) = R(r)*Theta(theta)
+   => r^2*R''*Theta + r*R'*Theta + R*Theta'' = 0
+   => (r^2*R'' + r*R')/R = -Theta''/Theta = lambda
+   得:
+     Theta'' + lambda*Theta = 0  (周期边界条件 => lambda = n^2)
+     r^2*R'' + r*R' - n^2*R = 0  (Euler-Cauchy 方程)               */
+
+printf(true, "分离变量后:~%")$
+printf(true, "  角向ODE: Theta'' + n^2*Theta = 0 (周期解)~%")$
+printf(true, "  径向ODE: r^2*R'' + r*R' - n^2*R = 0 (Euler方程)~%~%")$
+
+/* 求解径向ODE (Euler-Cauchy 方程) */
+ode_R_euler: r^2 * 'diff(R, r, 2) + r * 'diff(R, r) - n^2 * R = 0$
+sol_R_euler: ode2(ode_R_euler, R, r)$
+printf(true, "径向ODE的通解: ~a~%", sol_R_euler)$
+printf(true, "  圆内有界解: R_n(r) = r^n (舍弃 r^(-n) 项)~%")$
+printf(true, "  n=0 时: R_0(r) = c1 + c2*ln(r) => R_0 = 1 (有界)~%~%")$
+
+printf(true, "圆内 Laplace 方程的解:~%")$
+printf(true, "  u(r,theta) = a0/2 + sum_{n=1}^{inf} r^n * (a_n*cos(n*theta) + b_n*sin(n*theta))~%")$
+printf(true, "  其中 (Poisson 积分公式):~%")$
+printf(true, "    a_n = (1/(pi*R^n)) * integral_0^{2*pi} f(theta)*cos(n*theta) dtheta~%")$
+printf(true, "    b_n = (1/(pi*R^n)) * integral_0^{2*pi} f(theta)*sin(n*theta) dtheta~%~%")$
+
+/* ============================================================
+   7. 热传导方程的数值验证
+   ============================================================ */
+/* 用前几项傅里叶级数近似热传导方程的解 */
+
+printf(true, "--- 7. 热传导方程的级数近似 ---~%~%")$
+
+/* 取 L=1, k=1, f(x) = x*(1-x) */
+L_val: 1$
+k_val: 1$
+f_init: x * (1 - x)$
+
+/* 计算前5个傅里叶系数 */
+printf(true, "初始条件 f(x) = x(1-x), L=1, k=1~%")$
+printf(true, "傅里叶系数 B_n:~%")$
+
+for n: 1 thru 5 do block(
+    integrand: f_init * sin(n * %pi * x),
+    Bn: 2 * integrate(integrand, x, 0, 1),
+    Bn: ratsimp(Bn),
+    printf(true, "  B_~a = ~a~%", n, Bn)
+)$
+
+printf(true, "~%")$
+
+/* t=0 时的级数近似（应接近 f(x)） */
+printf(true, "t=0 时的前5项级数近似 u(x,0):~%")$
+u_approx: 0$
+for n: 1 thru 5 do block(
+    integrand: f_init * sin(n * %pi * x),
+    Bn: 2 * integrate(integrand, x, 0, 1),
+    u_approx: u_approx + Bn * sin(n * %pi * x)
+)$
+u_approx: expand(u_approx)$
+printf(true, "  u(x,0) ~= ~a~%~%", u_approx)$
+
+/* t=0.1 时（应更平滑） */
+printf(true, "t=0.1 时的级数近似:~%")$
+u_t01: 0$
+for n: 1 thru 5 do block(
+    integrand: f_init * sin(n * %pi * x),
+    Bn: 2 * integrate(integrand, x, 0, 1),
+    u_t01: u_t01 + Bn * sin(n * %pi * x) * exp(-k_val * (n * %pi)^2 * 0.1)
+)$
+u_t01: expand(u_t01)$
+printf(true, "  u(x,0.1) ~= ~a~%~%", u_t01)$
+
+/* 可视化: 绘制不同时间的温度分布 */
+/* wxplot2d 需要具体函数，这里绘制级数近似 */
+
+/* 构建一个可用的函数 */
+u_approx_func(n_max, t_val) :=
+    block([sum_val: 0],
+        for i: 1 thru n_max do block(
+            integrand: x*(1-x) * sin(i*%pi*x),
+            Bn: 2 * integrate(integrand, x, 0, 1),
+            sum_val: sum_val + Bn * sin(i*%pi*x) * exp(-(i*%pi)^2 * t_val)
+        ),
+        sum_val
+    )$
+
+/* 绘制不同时间的温度分布 */
+plot_t0: u_approx_func(10, 0)$
+plot_t005: u_approx_func(10, 0.05)$
+plot_t01: u_approx_func(10, 0.1)$
+plot_t05: u_approx_func(10, 0.5)$
+
+wxplot2d([plot_t0, plot_t005, plot_t01, plot_t05],
+         [x, 0, 1],
+         [title, "Heat Equation: Temperature Distribution"],
+         [legend, "t=0", "t=0.05", "t=0.1", "t=0.5"],
+         [xlabel, "x"], [ylabel, "u(x,t)"])$
+
+printf(true, "已绘制不同时间的温度分布图~%~%")$
+
+/* ============================================================
+   8. 波动方程的数值验证
+   ============================================================ */
+/* 拨弦问题的级数近似 */
+
+printf(true, "--- 8. 波动方程的级数近似 ---~%~%")$
+
+/* f(x) = x for 0<=x<=0.5, f(x) = 1-x for 0.5<=x<=1
+   g(x) = 0, L=1, c=1 */
+
+printf(true, "拨弦问题: f(x) = 三角形脉冲, g(x)=0, L=1, c=1~%~%")$
+
+/* 计算傅里弦系数 */
+for n: 1 thru 6 do block(
+    integrand_left: 2*x * sin(n * %pi * x),
+    integrand_right: 2*(1-x) * sin(n * %pi * x),
+    An: integrate(integrand_left, x, 0, 1/2) +
+        integrate(integrand_right, x, 1/2, 1),
+    An: ratsimp(An),
+    printf(true, "  A_~a = ~a~%", n, An)
+)$
+
+printf(true, "~%")$
+
+/* 构建不同时间的波形 */
+wave_func(n_max, t_val) :=
+    block([sum_val: 0],
+        for i: 1 thru n_max do block(
+            integrand_left: 2*x * sin(i*%pi*x),
+            integrand_right: 2*(1-x) * sin(i*%pi*x),
+            An: integrate(integrand_left, x, 0, 1/2) +
+                integrate(integrand_right, x, 1/2, 1),
+            sum_val: sum_val + An * sin(i*%pi*x) * cos(i*%pi*t_val)
+        ),
+        sum_val
+    )$
+
+plot_w0: wave_func(10, 0)$
+plot_w025: wave_func(10, 0.25)$
+plot_w05: wave_func(10, 0.5)$
+plot_w075: wave_func(10, 0.75)$
+
+wxplot2d([plot_w0, plot_w025, plot_w05, plot_w075],
+         [x, 0, 1],
+         [title, "Wave Equation: String Vibration"],
+         [legend, "t=0", "t=0.25", "t=0.5", "t=0.75"],
+         [xlabel, "x"], [ylabel, "u(x,t)"])$
+
+printf(true, "已绘制不同时间的弦振动波形图~%~%")$
+
+/* ============================================================
+   9. PDE 求解器使用
+   ============================================================ */
+
+printf(true, "--- 9. Maxima PDE 求解器 ---~%~%")$
+
+/* Maxima 的 pdesolve 可以求解某些PDE */
+/* 注意: pdesolve 功能有限，主要用于一阶PDE */
+
+/* 一阶线性PDE: a*u_x + b*u_y = 0 */
+printf(true, "一阶线性PDE: u_x + 2*u_y = 0~%")$
+pde1: 'diff(u, x) + 2 * 'diff(u, y) = 0$
+sol_pde1: pdesolve(pde1, u)$
+printf(true, "解: ~a~%~%", sol_pde1)$
+
+/* 特征线法的思想 */
+printf(true, "特征线法:~%")$
+printf(true, "  对于 a*u_x + b*u_y = 0~%")$
+printf(true, "  特征方程: dx/a = dy/b~%")$
+printf(true, "  积分得: bx - ay = C (特征线)~%")$
+printf(true, "  通解: u = f(bx - ay)~%~%")$
+
+/* ============================================================
+   10. 总结与比较
+   ============================================================ */
+
+printf(true, "--- 10. 偏微分方程总结 ---~%~%")$
+
+printf(true, "常见PDE及其解法:~%")$
+printf(true, "┌─────────────────┬──────────┬──────────────────────────┐~%")$
+printf(true, "│ PDE             │ 类型     │ 典型解法                 │~%")$
+printf(true, "├─────────────────┼──────────┼──────────────────────────┤~%")$
+printf(true, "│ Laplace 方程    │ 椭圆型   │ 分离变量、Green函数      │~%")$
+printf(true, "│ 热传导方程      │ 抛物型   │ 分离变量、Fourier变换    │~%")$
+printf(true, "│ 波动方程        │ 双曲型   │ 分离变量、d'Alembert公式 │~%")$
+printf(true, "│ 一阶PDE         │ --       │ 特征线法                 │~%")$
+printf(true, "└─────────────────┴──────────┴──────────────────────────┘~%~%")$
+
+printf(true, "分离变量法适用条件:~%")$
+printf(true, "  1. 方程是线性的~%")$
+printf(true, "  2. 区域是规则的（矩形、圆形等）~%")$
+printf(true, "  3. 边界条件是齐次的（或可化为齐次）~%~%")$
+
+printf(true, "=== 偏微分方程基础示例完成 ===~%")$

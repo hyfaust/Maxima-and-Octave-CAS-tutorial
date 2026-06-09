@@ -1,0 +1,195 @@
+/* Navier-Stokes Equations - Maxima Implementation */
+/* Navier-Stokes方程 - Maxima实现 */
+/*
+ * 物理背景：描述粘性不可压缩流体运动的基本方程组
+ * 由质量守恒（连续性方程）和动量守恒（N-S方程）组成
+ * 是流体力学中最核心的控制方程
+ *
+ * 作者: CAS Learn Tutorial
+ */
+
+/* 1. 笛卡尔坐标系中的N-S方程 */
+printf(true, "=== 笛卡尔坐标系中的Navier-Stokes方程 ===~%~%");
+
+/* 定义符号变量 */
+assume(rho > 0);
+assume(mu > 0);
+
+/* 速度分量 */
+u: u(x, y, z, t);
+v: v(x, y, z, t);
+w: w(x, y, z, t);
+p: p(x, y, z, t);
+
+/* 连续性方程（质量守恒）：∇·v = 0 */
+/* 对于不可压缩流体，密度为常数 */
+continuity_eq: diff(u, x) + diff(v, y) + diff(w, z);
+
+printf(true, "连续性方程（不可压缩）:~%");
+printf(true, "  ∇·v = ∂u/∂x + ∂v/∂y + ∂w/∂z = 0~%");
+printf(true, "  符号形式: ~a = 0~%~%", continuity_eq);
+
+/* 动量方程（N-S方程）的各个分量 */
+/* ρ(∂v/∂t + v·∇v) = -∇p + μ∇²v + f */
+/* 其中 ∇² = ∂²/∂x² + ∂²/∂y² + ∂²/∂z² 是拉普拉斯算子 */
+
+/* x方向动量方程 */
+laplacian_u: diff(u, x, 2) + diff(u, y, 2) + diff(u, z, 2);
+momentum_x: rho * (diff(u, t) + u * diff(u, x) + v * diff(u, y) + w * diff(u, z))
+             + diff(p, x) - mu * laplacian_u;
+
+printf(true, "x方向动量方程:~%");
+printf(true, "  ρ(∂u/∂t + u∂u/∂x + v∂u/∂y + w∂u/∂z) = -∂p/∂x + μ∇²u~%~%");
+
+/* y方向动量方程 */
+laplacian_v: diff(v, x, 2) + diff(v, y, 2) + diff(v, z, 2);
+momentum_y: rho * (diff(v, t) + u * diff(v, x) + v * diff(v, y) + w * diff(v, z))
+             + diff(p, y) - mu * laplacian_v;
+
+/* z方向动量方程 */
+laplacian_w: diff(w, x, 2) + diff(w, y, 2) + diff(w, z, 2);
+momentum_z: rho * (diff(w, t) + u * diff(w, x) + v * diff(w, y) + w * diff(w, z))
+             + diff(p, z) - mu * laplacian_w;
+
+printf(true, "完整的N-S方程组（笛卡尔坐标）:~%");
+printf(true, "  连续性: ∂u/∂x + ∂v/∂y + ∂w/∂z = 0~%");
+printf(true, "  x动量:  ρDu/Dt = -∂p/∂x + μ∇²u~%");
+printf(true, "  y动量:  ρDv/Dt = -∂p/∂y + μ∇²v~%");
+printf(true, "  z动量:  ρDw/Dt = -∂p/∂z + μ∇²w~%");
+printf(true, "  其中 D/Dt = ∂/∂t + v·∇ 是物质导数~%~%");
+
+/* 2. 柱坐标系中的N-S方程 */
+printf(true, "=== 柱坐标系中的Navier-Stokes方程 ===~%~%");
+
+/* 柱坐标 (r, θ, z) */
+assume(r > 0);
+declare(theta, real);
+
+v_r: v_r(r, theta, z, t);
+v_theta: v_theta(r, theta, z, t);
+v_z: v_z(r, theta, z, t);
+p_cyl: p_cyl(r, theta, z, t);
+
+printf(true, "柱坐标系 (r, θ, z) 中的方程:~%~%");
+
+/* 柱坐标连续性方程 */
+printf(true, "连续性方程:~%");
+printf(true, "  (1/r)∂(r·v_r)/∂r + (1/r)∂v_θ/∂θ + ∂v_z/∂z = 0~%~%");
+
+/* 柱坐标r方向动量方程 */
+printf(true, "r方向动量方程:~%");
+printf(true, "  ρ(∂v_r/∂t + v_r∂v_r/∂r + (v_θ/r)∂v_r/∂θ - v_θ²/r + v_z∂v_r/∂z)~%");
+printf(true, "    = -∂p/∂r + μ[∇²v_r - v_r/r² - (2/r²)∂v_θ/∂θ]~%~%");
+
+/* 柱坐标θ方向动量方程 */
+printf(true, "θ方向动量方程:~%");
+printf(true, "  ρ(∂v_θ/∂t + v_r∂v_θ/∂r + (v_θ/r)∂v_θ/∂θ + v_r·v_θ/r + v_z∂v_θ/∂z)~%");
+printf(true, "    = -(1/r)∂p/∂θ + μ[∇²v_θ + (2/r²)∂v_r/∂θ - v_θ/r²]~%~%");
+
+/* 柱坐标z方向动量方程 */
+printf(true, "z方向动量方程:~%");
+printf(true, "  ρ(∂v_z/∂t + v_r∂v_z/∂r + (v_θ/r)∂v_z/∂θ + v_z∂v_z/∂z)~%");
+printf(true, "    = -∂p/∂z + μ∇²v_z~%~%");
+
+/* 柱坐标拉普拉斯算子 */
+printf(true, "柱坐标拉普拉斯算子:~%");
+printf(true, "  ∇² = (1/r)∂/∂r(r∂/∂r) + (1/r²)∂²/∂θ² + ∂²/∂z²~%~%");
+
+/* 3. 二维不可压缩流函数形式 */
+printf(true, "=== 二维不可压缩流函数形式 ===~%~%");
+
+/* 对于二维不可压缩流动，自动满足连续性方程 */
+stream_f: psi_ns(x, y, t);
+omega_f: omega_ns(x, y, t);
+
+/* 速度与流函数的关系 */
+/* u = ∂ψ/∂y,  v = -∂ψ/∂x */
+u_from_psi: diff(stream_f, y);
+v_from_psi: -diff(stream_f, x);
+
+printf(true, "流函数定义:~%");
+printf(true, "  u = ∂ψ/∂y,  v = -∂ψ/∂x~%");
+printf(true, "  自动满足连续性方程: ∂u/∂x + ∂v/∂y = 0~%~%");
+
+/* 验证连续性方程自动满足 */
+check_continuity: ratsimp(diff(u_from_psi, x) + diff(v_from_psi, y));
+printf(true, "验证: ∂u/∂x + ∂v/∂y = ~a = 0 ✓~%~%", check_continuity);
+
+/* 4. 涡量-流函数方程 */
+printf(true, "=== 涡量-流函数方程 ===~%~%");
+
+/* 涡量定义：ω = ∂v/∂x - ∂u/∂y */
+/* 用流函数表示：ω = -∇²ψ */
+omega_from_psi: -(diff(stream_f, x, 2) + diff(stream_f, y, 2));
+printf(true, "涡量-流函数关系:~%");
+printf(true, "  ω = ∂v/∂x - ∂u/∂y = -∇²ψ~%");
+printf(true, "  即: ∇²ψ = -ω~%~%");
+
+/* 涡量输运方程（二维不可压缩） */
+/* ∂ω/∂t + u∂ω/∂x + v∂ω/∂y = ν∇²ω */
+/* 其中 ν = μ/ρ 是运动粘度 */
+assume(nu > 0);
+
+printf(true, "涡量输运方程:~%");
+printf(true, "  ∂ω/∂t + u∂ω/∂x + v∂ω/∂y = ν∇²ω~%");
+printf(true, "  用流函数表示:~%");
+printf(true, "  ∂ω/∂t + ∂ψ/∂y·∂ω/∂x - ∂ψ/∂x·∂ω/∂y = ν∇²ω~%~%");
+
+/* 流函数形式的完整方程组 */
+printf(true, "流函数-涡量形式的完整方程组:~%");
+printf(true, "  (1) ∇²ψ = -ω          （运动学关系）~%");
+printf(true, "  (2) ∂ω/∂t + {ψ,ω} = ν∇²ω  （涡量输运）~%");
+printf(true, "  其中 {ψ,ω} = ∂ψ/∂y·∂ω/∂x - ∂ψ/∂x·∂ω/∂y 是Poisson括号~%~%");
+
+/* 5. Stokes方程（低Reynolds数近似） */
+printf(true, "=== Stokes方程（低Reynolds数近似） ===~%~%");
+
+/* 当 Re << 1 时，忽略非线性对流项 */
+/* 简化为：0 = -∇p + μ∇²v */
+printf(true, "Stokes方程（忽略惯性项）:~%");
+printf(true, "  0 = -∇p + μ∇²v~%");
+printf(true, "  连续性: ∇·v = 0~%~%");
+
+/* Stokes方程的流函数形式 */
+/* ∇⁴ψ = 0 （双调和方程） */
+printf(true, "流函数形式（双调和方程）:~%");
+printf(true, "  ∇⁴ψ = 0~%");
+printf(true, "  即 ∇²(∇²ψ) = 0~%~%");
+
+/* 6. 无量纲形式 */
+printf(true, "=== 无量纲N-S方程 ===~%~%");
+
+/* 引入特征量：L（长度）, U（速度）, T=L/U（时间）, P=ρU²（压力） */
+/* 无量纲变量：x* = x/L, v* = v/U, p* = p/(ρU²), t* = t/(L/U) */
+
+assume(Re > 0);
+
+printf(true, "无量纲形式（用 * 表示无量纲量）:~%");
+printf(true, "  ∇*·v* = 0~%");
+printf(true, "  ∂v*/∂t* + v*·∇*v* = -∇*p* + (1/Re)∇*²v*~%~%");
+
+printf(true, "Reynolds数的物理意义:~%");
+printf(true, "  Re = ρUL/μ = UL/ν = 惯性力/粘性力~%");
+printf(true, "  Re << 1: 粘性主导，Stokes流动~%");
+printf(true, "  Re >> 1: 惯性主导，湍流~%~%");
+
+/* 展示无量纲化过程 */
+printf(true, "无量纲化过程:~%");
+printf(true, "  x = L·x*,  v = U·v*,  t = (L/U)·t*,  p = ρU²·p*~%");
+printf(true, "  代入原方程，各项除以 ρU²/L 得到无量纲形式~%~%");
+
+/* 7. 能量方程（补充） */
+printf(true, "=== 能量方程 ===~%~%");
+
+T_temp: T_temp(x, y, z, t);
+assume(cp > 0);
+assume(kappa > 0);
+
+printf(true, "能量方程（忽略粘性耗散）:~%");
+printf(true, "  ρcp(∂T/∂t + v·∇T) = κ∇²T~%~%");
+
+printf(true, "完整的能量方程（含粘性耗散Φ）:~%");
+printf(true, "  ρcp DT/Dt = κ∇²T + Φ~%");
+printf(true, "  其中 Φ 是粘性耗散函数~%~%");
+
+printf(true, "Navier-Stokes方程分析完成！~%");

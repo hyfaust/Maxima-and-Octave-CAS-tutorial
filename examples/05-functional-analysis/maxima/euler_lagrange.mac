@@ -1,0 +1,356 @@
+/* ========================================================================= */
+/* Euler-Lagrange Equations - Maxima Implementation                          */
+/* ========================================================================= */
+/* 本文件演示欧拉-拉格朗日方程的推导和各种应用                                */
+/* 包括：E-L方程推导、特殊形式、自然边界、多变量、Lagrange力学               */
+/* ========================================================================= */
+
+/* 清除工作空间 */
+kill(all)$
+reset()$
+
+/* 关闭二维显示以简化输出 */
+display2d: false$
+
+printf(true, "============================================================~%")$
+printf(true, "          Euler-Lagrange Equations - 欧拉-拉格朗日方程        ~%")$
+printf(true, "============================================================~%~%")$
+
+/* ========================================================================= */
+/* 1. E-L方程的推导                                                          */
+/* ========================================================================= */
+/* 对泛函 J[y] = ∫_a^b F(x, y, y') dx 取变分                                */
+/* 令 y -> y + εη, 其中 η(a)=η(b)=0                                        */
+/* dJ/dε|_{ε=0} = ∫ [F_y*η + F_{y'}*η'] dx = 0                             */
+/* 分部积分: ∫ F_{y'}*η' dx = [F_{y'}*η]_a^b - ∫ d/dx(F_{y'})*η dx        */
+/* 边界项消失，得: ∫ [F_y - d/dx(F_{y'})] η dx = 0                         */
+/* 由η的任意性，得E-L方程: F_y - d/dx(F_{y'}) = 0                           */
+
+depends(y, x)$
+declare(C1, constant)$
+declare(C2, constant)$
+
+printf(true, "1. E-L方程的推导~%")$
+printf(true, "======================================================~%")$
+printf(true, "   泛函: J[y] = integral_a^b F(x, y, y') dx~%")$
+printf(true, "   变分: y -> y + eps*eta, eta(a)=eta(b)=0~%~%")$
+
+printf(true, "   Step 1: 计算 dJ/deps|_{eps=0}~%")$
+printf(true, "   dJ/deps = integral [dF/dy * eta + dF/dy' * eta'] dx~%~%")$
+
+printf(true, "   Step 2: 对 dF/dy' * eta' 项分部积分~%")$
+printf(true, "   integral dF/dy' * eta' dx = [dF/dy' * eta]_a^b~%")$
+printf(true, "                                - integral d/dx(dF/dy') * eta dx~%")$
+printf(true, "   边界项 = 0 (因为 eta(a)=eta(b)=0)~%~%")$
+
+printf(true, "   Step 3: 合并~%")$
+printf(true, "   dJ/deps = integral [dF/dy - d/dx(dF/dy')] * eta dx = 0~%~%")$
+
+printf(true, "   Step 4: 由 eta 的任意性~%")$
+printf(true, "   得 E-L 方程: dF/dy - d/dx(dF/dy') = 0~%~%")$
+
+/* 用具体例子演示推导过程 */
+printf(true, "   --- 具体示例 ---~%")$
+printf(true, "   F = y'^2 - y^2~%")$
+
+F_demo: diff(y(x), x)^2 - y(x)^2$
+F_y_demo: diff(F_demo, y(x))$
+F_yp_demo: diff(F_demo, diff(y(x), x))$
+
+printf(true, "   dF/dy = ~a~%", F_y_demo)$
+printf(true, "   dF/dy' = ~a~%", F_yp_demo)$
+printf(true, "   d/dx(dF/dy') = ~a~%", diff(F_yp_demo, x))$
+printf(true, "~%")$
+
+EL_demo: ratsimp(F_y_demo - diff(F_yp_demo, x))$
+printf(true, "   E-L方程: ~a = 0~%", EL_demo)$
+printf(true, "   即: y'' + y = 0~%~%")$
+
+/* ========================================================================= */
+/* 2. 不显含x的情况 - Beltrami恒等式                                         */
+/* ========================================================================= */
+/* 当 F = F(y, y') 不显含 x 时:                                              */
+/* d/dx(F - y'*F_{y'}) = F_y*y' + F_{y'}*y'' - y''*F_{y'}~%                 */
+/*                      - y'*(F_{yy}*y' + F_{yy'}*y'')                       */
+/*                   = y'*(F_y - d/dx(F_{y'})) = 0 (由E-L方程)               */
+/* 因此 F - y'*F_{y'} = C (Beltrami恒等式)                                   */
+
+printf(true, "============================================================~%")$
+printf(true, "2. 不显含x的情况 - Beltrami恒等式~%")$
+printf(true, "============================================================~%")$
+printf(true, "   当 F = F(y, y') 不显含 x 时:~%")$
+printf(true, "   F - y' * dF/dy' = C (常数)~%~%")$
+
+/* 示例: 最速降线问题 */
+printf(true, "   示例: 最速降线 F = sqrt(1+y'^2)/sqrt(y)~%")$
+
+F_brach: sqrt(1 + diff(y(x), x)^2) / sqrt(y(x))$
+F_brach_yp: diff(F_brach, diff(y(x), x))$
+Beltrami_brach: ratsimp(F_brach - diff(y(x), x) * F_brach_yp)$
+
+printf(true, "   dF/dy' = ~a~%", ratsimp(F_brach_yp))$
+printf(true, "   F - y'*dF/dy' = ~a = C~%", Beltrami_brach)$
+printf(true, "~%")$
+
+/* 示例: 测地线问题 F = sqrt(1+y'^2) */
+printf(true, "   示例: 测地线 (最短路径) F = sqrt(1+y'^2)~%")$
+
+F_geo: sqrt(1 + diff(y(x), x)^2)$
+F_geo_yp: diff(F_geo, diff(y(x), x))$
+Beltrami_geo: ratsimp(F_geo - diff(y(x), x) * F_geo_yp)$
+
+printf(true, "   dF/dy' = ~a~%", ratsimp(F_geo_yp))$
+printf(true, "   F - y'*dF/dy' = ~a = C~%", Beltrami_geo)$
+printf(true, "   即: 1/sqrt(1+y'^2) = C~%")$
+printf(true, "   => y' = const => y = ax + b (直线)~%~%")$
+
+/* ========================================================================= */
+/* 3. 不显含y的情况                                                          */
+/* ========================================================================= */
+/* 当 F = F(x, y') 不显含 y 时:                                              */
+/* E-L方程: d/dx(F_{y'}) = 0 => F_{y'} = C                                  */
+
+printf(true, "============================================================~%")$
+printf(true, "3. 不显含y的情况~%")$
+printf(true, "============================================================~%")$
+printf(true, "   当 F = F(x, y') 不显含 y 时:~%")$
+printf(true, "   d/dx(dF/dy') = 0 => dF/dy' = C~%~%")$
+
+/* 示例: F = x*y'^2 */
+printf(true, "   示例: F = x * y'^2~%")$
+
+F_no_y: x * diff(y(x), x)^2$
+F_no_y_yp: diff(F_no_y, diff(y(x), x))$
+
+printf(true, "   dF/dy' = ~a = C~%", F_no_y_yp)$
+printf(true, "   => 2*x*y' = C => y' = C/(2x)~%")$
+printf(true, "   => y = (C/2)*ln(x) + D~%~%")$
+
+/* 求解验证 */
+y_no_y_sol: ode2(2*x*'diff(y(x),x) = C, y(x), x)$
+printf(true, "   Maxima求解: ~a~%~%", y_no_y_sol)$
+
+/* ========================================================================= */
+/* 4. 仅含y'的情况                                                          */
+/* ========================================================================= */
+/* 当 F = F(y') 仅含 y' 时:                                                  */
+/* E-L方程: d/dx(F_{y'}) = 0 => F_{y'} = C => y' = F_{y'}^{-1}(C) = const  */
+
+printf(true, "============================================================~%")$
+printf(true, "4. 仅含y'的情况~%")$
+printf(true, "============================================================~%")$
+printf(true, "   当 F = F(y') 仅含 y' 时:~%")$
+printf(true, "   dF/dy' = C => y' = const => y = ax + b (直线)~%~%")$
+
+/* 示例: F = sqrt(1+y'^2) (弧长泛函) */
+printf(true, "   示例: F = sqrt(1+y'^2) (弧长泛函)~%")$
+
+F_arc: sqrt(1 + diff(y(x), x)^2)$
+F_arc_yp: ratsimp(diff(F_arc, diff(y(x), x)))$
+
+printf(true, "   dF/dy' = ~a = C~%", F_arc_yp)$
+printf(true, "   => y'/sqrt(1+y'^2) = C~%")$
+printf(true, "   => y' = C/sqrt(1-C^2) = const~%")$
+printf(true, "   => y = ax + b (直线，即最短路径)~%~%")$
+
+/* ========================================================================= */
+/* 5. 自然边界条件                                                          */
+/* ========================================================================= */
+/* 当边界值未指定时，需要自然边界条件: dF/dy'|_{x=a} = 0 或 dF/dy'|_{x=b} = 0 */
+
+printf(true, "============================================================~%")$
+printf(true, "5. 自然边界条件~%")$
+printf(true, "============================================================~%")$
+printf(true, "   当 y(a) 或 y(b) 未指定时，需要自然边界条件~%")$
+printf(true, "   dF/dy'|_{x=a} = 0 或 dF/dy'|_{x=b} = 0~%~%")$
+
+/* 示例: J[y] = ∫_0^1 (y'^2 - 2*y) dx, y(0)=0, y(1) 自由 */
+printf(true, "   示例: J = integral_0^1 (y'^2 - 2y) dx~%")$
+printf(true, "   y(0) = 0, y(1) 自由~%~%")$
+
+F_nat: diff(y(x), x)^2 - 2*y(x)$
+F_nat_y: diff(F_nat, y(x))$
+F_nat_yp: diff(F_nat, diff(y(x), x))$
+
+printf(true, "   dF/dy = ~a~%", F_nat_y)$
+printf(true, "   dF/dy' = ~a~%", F_nat_yp)$
+printf(true, "   d/dx(dF/dy') = ~a~%", diff(F_nat_yp, x))$
+printf(true, "~%")$
+
+/* E-L方程: -2 - 2*y'' = 0 => y'' = -1 */
+EL_nat: ratsimp(F_nat_y - diff(F_nat_yp, x))$
+printf(true, "   E-L方程: ~a = 0~%", EL_nat)$
+printf(true, "   即: y'' = -1~%~%")$
+
+/* 通解 */
+y_nat_gen: ode2('diff(y(x),x,2) = -1, y(x), x)$
+printf(true, "   通解: ~a~%", y_nat_gen)$
+printf(true, "   即: y = -x^2/2 + C1*x + C2~%~%")$
+
+/* 边界条件 */
+printf(true, "   条件1: y(0) = 0 => C2 = 0~%")$
+printf(true, "   条件2: 自然边界 dF/dy'|_{x=1} = 0~%")$
+printf(true, "          2*y'(1) = 0 => y'(1) = 0~%")$
+printf(true, "          -1 + C1 = 0 => C1 = 1~%~%")$
+
+y_nat_sol: -x^2/2 + x$
+printf(true, "   解: y(x) = ~a~%", y_nat_sol)$
+printf(true, "   即: y = x - x^2/2 = x(2-x)/2~%~%")$
+
+/* 验证 */
+printf(true, "   验证:~%")$
+printf(true, "   y(0) = ~a (应为0)~%", subst(x=0, y_nat_sol))$
+printf(true, "   y'(1) = ~a (应为0)~%", subst(x=1, diff(y_nat_sol, x)))$
+printf(true, "~%")$
+
+/* ========================================================================= */
+/* 6. 多个未知函数的E-L方程                                                  */
+/* ========================================================================= */
+/* 对于 J[y1,y2] = ∫ F(x, y1, y2, y1', y2') dx                             */
+/* 得到E-L方程组:                                                            */
+/* dF/dy1 - d/dx(dF/dy1') = 0                                               */
+/* dF/dy2 - d/dx(dF/dy2') = 0                                               */
+
+printf(true, "============================================================~%")$
+printf(true, "6. 多个未知函数的E-L方程~%")$
+printf(true, "============================================================~%")$
+printf(true, "   泛函: J[y1,y2] = integral F(x, y1, y2, y1', y2') dx~%")$
+printf(true, "   E-L方程组:~%")$
+printf(true, "   dF/dy1 - d/dx(dF/dy1') = 0~%")$
+printf(true, "   dF/dy2 - d/dx(dF/dy2') = 0~%~%")$
+
+/* 定义两个函数 */
+depends(y1, x)$
+depends(y2, x)$
+
+/* 示例: F = y1'^2 + y2'^2 + y1*y2 */
+printf(true, "   示例: F = y1'^2 + y2'^2 + y1*y2~%~%")$
+
+F_multi: diff(y1(x), x)^2 + diff(y2(x), x)^2 + y1(x)*y2(x)$
+
+/* 对 y1 的E-L方程 */
+F_multi_y1: diff(F_multi, y1(x))$
+F_multi_y1p: diff(F_multi, diff(y1(x), x))$
+EL_multi_1: ratsimp(F_multi_y1 - diff(F_multi_y1p, x))$
+
+printf(true, "   dF/dy1 = ~a~%", F_multi_y1)$
+printf(true, "   dF/dy1' = ~a~%", F_multi_y1p)$
+printf(true, "   E-L方程1: ~a = 0~%", EL_multi_1)$
+printf(true, "~%")$
+
+/* 对 y2 的E-L方程 */
+F_multi_y2: diff(F_multi, y2(x))$
+F_multi_y2p: diff(F_multi, diff(y2(x), x))$
+EL_multi_2: ratsimp(F_multi_y2 - diff(F_multi_y2p, x))$
+
+printf(true, "   dF/dy2 = ~a~%", F_multi_y2)$
+printf(true, "   dF/dy2' = ~a~%", F_multi_y2p)$
+printf(true, "   E-L方程2: ~a = 0~%", EL_multi_2)$
+printf(true, "~%")$
+
+/* 方程组: y2 - 2*y1'' = 0, y1 - 2*y2'' = 0 */
+printf(true, "   方程组:~%")$
+printf(true, "   2*y1'' = y2~%")$
+printf(true, "   2*y2'' = y1~%~%")$
+
+/* 消元: 对第一个方程求二阶导 */
+/* 2*y1'''' = y2'' = y1/2 */
+/* => y1'''' - y1/4 = 0 */
+printf(true, "   消元法: 对 2*y1''=y2 求二阶导~%")$
+printf(true, "   2*y1'''' = y2'' = y1/2~%")$
+printf(true, "   => y1'''' - y1/4 = 0~%~%")$
+
+/* 特征方程: r^4 - 1/4 = 0 => r^2 = +/-1/2 */
+printf(true, "   特征方程: r^4 - 1/4 = 0~%")$
+printf(true, "   r^2 = 1/2 或 r^2 = -1/2~%")$
+printf(true, "   r = +/-1/sqrt(2), +/-i/sqrt(2)~%~%")$
+
+/* 通解形式 */
+printf(true, "   通解形式:~%")$
+printf(true, "   y1 = A*exp(x/sqrt(2)) + B*exp(-x/sqrt(2))~%")$
+printf(true, "       + C*cos(x/sqrt(2)) + D*sin(x/sqrt(2))~%")$
+printf(true, "   y2 = 2*y1'' (由第一个方程确定)~%~%")$
+
+/* ========================================================================= */
+/* 7. Lagrange力学应用                                                       */
+/* ========================================================================= */
+/* Lagrange方程是E-L方程在力学中的应用                                       */
+/* d/dt(dL/dq') - dL/dq = 0, 其中 L = T - V                                */
+
+printf(true, "============================================================~%")$
+printf(true, "7. Lagrange力学应用~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Lagrange方程: d/dt(dL/dq') - dL/dq = 0~%")$
+printf(true, "   L = T - V (动能 - 势能)~%~%")$
+
+/* 示例: 单摆 */
+/* T = (1/2)*m*l^2*theta'^2, V = -m*g*l*cos(theta) */
+/* L = (1/2)*m*l^2*theta'^2 + m*g*l*cos(theta) */
+
+declare(m, constant)$
+declare(l, constant)$
+declare(g, constant)$
+depends(theta, t)$
+
+printf(true, "   示例: 单摆~%")$
+printf(true, "   T = (1/2)*m*l^2*theta'^2~%")$
+printf(true, "   V = -m*g*l*cos(theta)~%")$
+printf(true, "   L = (1/2)*m*l^2*theta'^2 + m*g*l*cos(theta)~%~%")$
+
+L_pend: (1/2)*m*l^2*diff(theta(t), t)^2 + m*g*l*cos(theta(t))$
+
+/* 计算Lagrange方程的各项 */
+L_theta: diff(L_pend, theta(t))$
+L_thetap: diff(L_pend, diff(theta(t), t))$
+EL_pend: ratsimp(L_theta - diff(L_thetap, t))$
+
+printf(true, "   dL/dtheta = ~a~%", L_theta)$
+printf(true, "   dL/dtheta' = ~a~%", L_thetap)$
+printf(true, "   d/dt(dL/dtheta') = ~a~%", diff(L_thetap, t))$
+printf(true, "~%")$
+printf(true, "   Lagrange方程: ~a = 0~%", EL_pend)$
+printf(true, "   即: m*l^2*theta'' + m*g*l*sin(theta) = 0~%")$
+printf(true, "   或: theta'' + (g/l)*sin(theta) = 0~%~%")$
+
+/* 小角度近似: sin(theta) ≈ theta */
+printf(true, "   小角度近似 (sin(theta) ~~ theta):~%")$
+printf(true, "   theta'' + (g/l)*theta = 0~%")$
+printf(true, "   解: theta(t) = A*cos(omega*t + phi)~%")$
+printf(true, "   omega = sqrt(g/l), 周期 T = 2*pi*sqrt(l/g)~%~%")$
+
+/* 示例: 弹簧振子 */
+/* T = (1/2)*m*x'^2, V = (1/2)*k*x^2 */
+/* L = (1/2)*m*x'^2 - (1/2)*k*x^2 */
+
+declare(k, constant)$
+depends(x_func, t)$
+
+printf(true, "   示例: 弹簧振子~%")$
+printf(true, "   T = (1/2)*m*x'^2, V = (1/2)*k*x^2~%")$
+printf(true, "   L = (1/2)*m*x'^2 - (1/2)*k*x^2~%~%")$
+
+L_spring: (1/2)*m*diff(x_func(t), t)^2 - (1/2)*k*x_func(t)^2$
+L_x: diff(L_spring, x_func(t))$
+L_xp: diff(L_spring, diff(x_func(t), t))$
+EL_spring: ratsimp(L_x - diff(L_xp, t))$
+
+printf(true, "   Lagrange方程: ~a = 0~%", EL_spring)$
+printf(true, "   即: m*x'' + k*x = 0~%")$
+printf(true, "   解: x(t) = A*cos(omega*t + phi)~%")$
+printf(true, "   omega = sqrt(k/m)~%~%")$
+
+/* ========================================================================= */
+/* 总结                                                                       */
+/* ========================================================================= */
+printf(true, "============================================================~%")$
+printf(true, "                         总结~%")$
+printf(true, "============================================================~%")$
+printf(true, "1. E-L方程是变分法的核心方程~%")$
+printf(true, "2. 不显含x => Beltrami恒等式 F-y'*F_{y'}=C~%")$
+printf(true, "3. 不显含y => dF/dy'=C~%")$
+printf(true, "4. 仅含y'  => y'=const (直线)~%")$
+printf(true, "5. 自然边界条件处理自由端点~%")$
+printf(true, "6. 多个未知函数 => E-L方程组~%")$
+printf(true, "7. Lagrange力学是E-L方程的物理应用~%~%")$
+
+printf(true, "Done.~%")$
