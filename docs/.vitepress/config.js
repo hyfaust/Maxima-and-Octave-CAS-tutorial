@@ -44,10 +44,10 @@ export default defineConfig({
       ]
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/your-repo' }
+      { icon: 'github', link: 'https://github.com/hyfaust/Maxima-and-Octave-CAS-tutorial' }
     ],
     footer: {
-      message: '基于MIT协议发布',
+      message: '基于GPL v3协议发布',
       copyright: 'Copyright © 2026 CAS Learn'
     },
     search: {
