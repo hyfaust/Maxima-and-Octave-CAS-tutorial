@@ -5,7 +5,7 @@ export default defineConfig({
   title: 'CAS学习教程',
   description: '使用Octave和Maxima学习计算机代数系统',
   ignoreDeadLinks: true,
-  base: '/',
+  base: '/Maxima-and-Octave-CAS-tutorial/',
   lang: 'zh-CN',
   themeConfig: {
     nav: [
