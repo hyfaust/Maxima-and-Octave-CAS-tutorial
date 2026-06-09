@@ -1,0 +1,292 @@
+/* Stream Function and Velocity Potential - Maxima Implementation */
+/* 流函数与速度势函数 - Maxima实现 */
+/*
+ * 物理背景：
+ *   流函数ψ是二维不可压缩流动中描述流线的函数
+ *   速度势φ是无旋流动（势流）中描述速度场的函数
+ *   两者通过Laplace方程联系，是求解势流问题的核心工具
+ *
+ * 作者: CAS Learn Tutorial
+ */
+
+/* 1. 流函数的定义和性质 */
+printf(true, "=== 流函数的定义和性质 ===~%~%");
+
+/* 定义符号变量 */
+declare(x, real);
+declare(y, real);
+assume(r > 0);
+declare(theta, real);
+assume(U_inf > 0);
+assume(Q > 0);
+assume(Gamma > 0);
+
+psi: psi(x, y);
+phi: phi(x, y);
+
+/* 流函数定义（二维笛卡尔坐标） */
+/* u = ∂ψ/∂y,  v = -∂ψ/∂x */
+printf(true, "流函数定义:~%");
+printf(true, "  u = ∂ψ/∂y~%");
+printf(true, "  v = -∂ψ/∂x~%~%");
+
+/* 关键性质 */
+printf(true, "流函数的关键性质:~%");
+printf(true, "  1. 自动满足连续性方程: ∂u/∂x + ∂v/∂y = 0~%");
+printf(true, "  2. 等流函数线(ψ=const)就是流线~%");
+printf(true, "  3. 两条流线之间的流量: ΔQ = ψ₂ - ψ₁~%~%");
+
+/* 验证连续性方程 */
+u_sym: diff(psi, y);
+v_sym: -diff(psi, x);
+cont_check: diff(u_sym, x) + diff(v_sym, y);
+printf(true, "验证连续性: ∂u/∂x + ∂v/∂y = ~a = 0 ✓~%~%", ratsimp(cont_check));
+
+/* 2. 柱坐标下的流函数 */
+printf(true, "=== 柱坐标下的流函数 ===~%~%");
+
+psi_r: psi_r(r, theta);
+
+/* 柱坐标流函数 */
+/* v_r = (1/r)∂ψ/∂θ,  v_θ = -∂ψ/∂r */
+printf(true, "柱坐标流函数:~%");
+printf(true, "  v_r = (1/r)∂ψ/∂θ~%");
+printf(true, "  v_θ = -∂ψ/∂r~%~%");
+
+/* 验证柱坐标连续性 */
+v_r_sym: diff(psi_r, theta) / r;
+v_theta_sym: -diff(psi_r, r);
+cont_r: diff(r * v_r_sym, r) / r + diff(v_theta_sym, theta) / r;
+printf(true, "柱坐标连续性验证: (1/r)∂(r·v_r)/∂r + (1/r)∂v_θ/∂θ = ~a = 0 ✓~%~%",
+       ratsimp(cont_r));
+
+/* 3. 速度势函数 */
+printf(true, "=== 速度势函数 ===~%~%");
+
+/* 速度势函数定义 */
+/* u = ∂φ/∂x,  v = ∂φ/∂y */
+printf(true, "速度势函数定义:~%");
+printf(true, "  u = ∂φ/∂x~%");
+printf(true, "  v = ∂φ/∂y~%~%");
+
+printf(true, "速度势函数的关键性质:~%");
+printf(true, "  1. 适用于无旋流动（∇×v = 0）~%");
+printf(true, "  2. 等势线(φ=const)与流线(ψ=const)正交~%");
+printf(true, "  3. 满足Laplace方程: ∇²φ = 0~%~%");
+
+/* Cauchy-Riemann条件 */
+printf(true, "Cauchy-Riemann条件:~%");
+printf(true, "  ∂φ/∂x = ∂ψ/∂y~%");
+printf(true, "  ∂φ/∂y = -∂ψ/∂x~%");
+printf(true, "  这使得 f(z) = φ + iψ 是解析函数（复势）~%~%");
+
+/* 4. 均匀流（Uniform Flow） */
+printf(true, "=== 均匀流 ===~%~%");
+
+/* 均匀流：速度为常数 U_inf 沿x方向 */
+/* u = U_inf, v = 0 */
+/* ψ = U_inf * y */
+/* φ = U_inf * x */
+
+psi_uniform: U_inf * y;
+phi_uniform: U_inf * x;
+
+printf(true, "均匀流（沿x方向）:~%");
+printf(true, "  速度: u = U, v = 0~%");
+printf(true, "  流函数: ψ = U·y~%");
+printf(true, "  速度势: φ = U·x~%");
+printf(true, "  流线: y = const（水平线）~%~%");
+
+/* 均匀流（任意方向） */
+declare(alpha, real);
+psi_uniform_angle: U_inf * (y * cos(alpha) - x * sin(alpha));
+printf(true, "倾斜均匀流（与x轴夹角α）:~%");
+printf(true, "  ψ = U(y·cos α - x·sin α)~%~%");
+
+/* 5. 点源/点汇（Source/Sink） */
+printf(true, "=== 点源/点汇 ===~%~%");
+
+/* 位于原点的点源 */
+/* 柱坐标：v_r = Q/(2πr), v_θ = 0 */
+/* 流函数：ψ = Q·θ/(2π) */
+/* 速度势：φ = Q·ln(r)/(2π) */
+
+psi_source: Q * theta / (2 * %pi);
+phi_source: Q * log(r) / (2 * %pi);
+
+printf(true, "位于原点的点源:~%");
+printf(true, "  强度: Q（单位时间单位深度的体积流量）~%");
+printf(true, "  径向速度: v_r = Q/(2πr)~%");
+printf(true, "  流函数: ψ = Q·θ/(2π)~%");
+printf(true, "  速度势: φ = Q·ln(r)/(2π)~%");
+printf(true, "  流线: θ = const（射线）~%");
+printf(true, "  等势线: r = const（同心圆）~%~%");
+
+/* 位于任意点 (x0, y0) 的源 */
+declare(x0, real);
+declare(y0, real);
+printf(true, "位于(x₀, y₀)的点源:~%");
+printf(true, "  ψ = Q·arctan((y-y₀)/(x-x₀))/(2π)~%~%");
+
+/* 6. 点涡（Point Vortex） */
+printf(true, "=== 点涡（点涡） ===~%~%");
+
+/* 位于原点的点涡（Rankine vortex的外区） */
+/* 柱坐标：v_r = 0, v_θ = Γ/(2πr) */
+/* 流函数：ψ = -Γ·ln(r)/(2π) */
+/* 速度势：φ = Γ·θ/(2π) */
+
+psi_vortex: -Gamma * log(r) / (2 * %pi);
+phi_vortex: Gamma * theta / (2 * %pi);
+
+printf(true, "位于原点的点涡（环量Γ）:~%");
+printf(true, "  切向速度: v_θ = Γ/(2πr)~%");
+printf(true, "  流函数: ψ = -Γ·ln(r)/(2π)~%");
+printf(true, "  速度势: φ = Γ·θ/(2π)~%");
+printf(true, "  流线: r = const（同心圆）~%");
+printf(true, "  注意：原点处速度无穷大（奇点）~%~%");
+
+/* 点涡的环量 */
+printf(true, "环量定义:~%");
+printf(true, "  Γ = ∮ v·dl = 2πr·(Γ/(2πr)) = Γ（与r无关）~%~%");
+
+/* 7. 偶极子（Doublet/Dipole） */
+printf(true, "=== 偶极子 ===~%~%");
+
+/* 偶极子 = 等强度的源和汇无限接近 */
+/* 强度 μ = Q·Δx（源强×距离） */
+/* 流函数：ψ = -μ·sin(θ)/(2πr) */
+/* 速度势：φ = μ·cos(θ)/(2πr) */
+
+assume(mu_dipole > 0);
+psi_doublet: -mu_dipole * sin(theta) / (2 * %pi * r);
+phi_doublet: mu_dipole * cos(theta) / (2 * %pi * r);
+
+printf(true, "位于原点的偶极子（强度μ）:~%");
+printf(true, "  构造：等强度源和汇无限接近~%");
+printf(true, "  流函数: ψ = -μ·sin(θ)/(2πr)~%");
+printf(true, "  速度势: φ = μ·cos(θ)/(2πr)~%");
+printf(true, "  流线: r² = -μ·sin(θ)/(2πψ) → 圆族~%");
+printf(true, "  物理意义：模拟绕圆柱的流动~%~%");
+
+/* 8. 超级叠加（Superposition） */
+printf(true, "=== 流动的超级叠加 ===~%~%");
+
+/* 原理：对于势流（无旋不可压缩），Laplace方程是线性的 */
+/* 因此多个基本解可以叠加 */
+printf(true, "叠加原理:~%");
+printf(true, "  对于势流，∇²φ = 0 是线性方程~%");
+printf(true, "  因此 φ_total = φ₁ + φ₂ + ... + φₙ~%");
+printf(true, "  同样 ψ_total = ψ₁ + ψ₂ + ... + ψₙ~%~%");
+
+/* 9. 叠加示例1：均匀流 + 点源 */
+printf(true, "=== 叠加示例1：均匀流 + 点源 ===~%~%");
+
+/* 半体（half-body）流动 */
+psi_half_body: U_inf * r * sin(theta) + Q * theta / (2 * %pi);
+phi_half_body: U_inf * r * cos(theta) + Q * log(r) / (2 * %pi);
+
+printf(true, "均匀流 + 点源 = 半体流动:~%");
+printf(true, "  ψ = U·r·sin(θ) + Q·θ/(2π)~%");
+printf(true, "  φ = U·r·cos(θ) + Q·ln(r)/(2π)~%~%");
+
+/* 驻点位置 */
+/* v_r = U·cos(θ) + Q/(2πr) = 0 */
+/* v_θ = -U·sin(θ) = 0  → θ = π */
+/* 代入: -U + Q/(2πr_s) = 0 → r_s = Q/(2πU) */
+r_stagnation: Q / (2 * %pi * U_inf);
+printf(true, "驻点位置:~%");
+printf(true, "  θ = π,  r_s = Q/(2πU)~%");
+printf(true, "  即: r_s = ~a~%~%", r_stagnation);
+
+/* 半体边界 */
+printf(true, "半体边界: ψ = 0 的流线~%");
+printf(true, "  当 θ → 0 时, r → ∞（半体延伸至无穷远）~%");
+printf(true, "  当 θ → π 时, r = r_s（驻点）~%~%");
+
+/* 10. 叠加示例2：均匀流 + 偶极子 = 绕圆柱流动 */
+printf(true, "=== 叠加示例2：绕圆柱流动 ===~%~%");
+
+/* 均匀流 + 偶极子 */
+/* ψ = U·r·sin(θ) - μ·sin(θ)/(2πr) */
+/* 选择 μ = 2πU·a² 使得圆柱半径为a */
+assume(a > 0);
+mu_cylinder: 2 * %pi * U_inf * a^2;
+
+psi_cylinder: U_inf * r * sin(theta) * (1 - a^2 / r^2);
+phi_cylinder: U_inf * r * cos(theta) * (1 + a^2 / r^2);
+
+printf(true, "均匀流 + 偶极子 = 绕圆柱流动:~%");
+printf(true, "  μ = 2πUa²~%");
+printf(true, "  ψ = U·r·sin(θ)(1 - a²/r²)~%");
+printf(true, "  φ = U·r·cos(θ)(1 + a²/r²)~%~%");
+
+printf(true, "圆柱表面 r = a 处: ψ = 0（流线与圆柱重合）~%~%");
+
+/* 圆柱表面的速度分布 */
+printf(true, "圆柱表面速度:~%");
+printf(true, "  v_r|_(r=a) = 0~%");
+printf(true, "  v_θ|_(r=a) = -2U·sin(θ)~%");
+printf(true, "  最大速度在 θ = π/2 和 3π/2: |v_max| = 2U~%~%");
+
+/* 压力分布（Bernoulli方程） */
+printf(true, "圆柱表面压力（Bernoulli方程）:~%");
+printf(true, "  p + ρv²/2 = p_∞ + ρU²/2~%");
+printf(true, "  p(θ) = p_∞ + ρU²/2·(1 - 4sin²θ)~%");
+printf(true, "  压力系数: Cp = (p - p_∞)/(ρU²/2) = 1 - 4sin²θ~%~%");
+
+/* 11. 叠加示例3：绕圆柱流动 + 环量（Kutta条件） */
+printf(true, "=== 叠加示例3：有环量的绕圆柱流动 ===~%~%");
+
+/* 均匀流 + 偶极子 + 点涡（Kutta-Joukowski定理的原型） */
+psi_kutta: U_inf * r * sin(theta) * (1 - a^2/r^2) + Gamma * log(r/a) / (2 * %pi);
+
+printf(true, "均匀流 + 偶极子 + 点涡:~%");
+printf(true, "  ψ = U·r·sin(θ)(1 - a²/r²) + Γ·ln(r/a)/(2π)~%~%");
+
+/* 升力（Kutta-Joukowski定理） */
+printf(true, "Kutta-Joukowski升力定理:~%");
+printf(true, "  L = ρ·U·Γ （单位展长的升力）~%");
+printf(true, "  升力方向：来流方向逆时针旋转90°~%");
+printf(true, "  环量Γ的正方向：逆时针~%~%");
+
+/* 驻点位置 */
+printf(true, "驻点位置（有环量时）:~%");
+printf(true, "  在圆柱表面: sin(θ_s) = Γ/(4πUa)~%");
+printf(true, "  当 Γ < 4πUa 时：两个驻点在下半圆柱对称分布~%");
+printf(true, "  当 Γ = 4πUa 时：两驻点合并于底部~%");
+printf(true, "  当 Γ > 4πUa 时：一个驻点离开圆柱~%~%");
+
+/* 12. 复势函数 */
+printf(true, "=== 复势函数 ===~%~%");
+
+/* 均匀流的复势：W(z) = U·z */
+printf(true, "均匀流复势:~%");
+printf(true, "  W(z) = U·z = U(x + iy)~%");
+printf(true, "  φ = Re(W) = Ux,  ψ = Im(W) = Uy~%~%");
+
+/* 点源复势：W(z) = Q/(2π)·ln(z) */
+printf(true, "点源复势:~%");
+printf(true, "  W(z) = Q/(2π)·ln(z)~%");
+printf(true, "  φ = Q·ln(r)/(2π),  ψ = Q·θ/(2π)~%~%");
+
+/* 点涡复势：W(z) = -iΓ/(2π)·ln(z) */
+printf(true, "点涡复势:~%");
+printf(true, "  W(z) = -iΓ/(2π)·ln(z)~%");
+printf(true, "  φ = Γ·θ/(2π),  ψ = -Γ·ln(r)/(2π)~%~%");
+
+/* 偶极子复势：W(z) = μ/(2πz) */
+printf(true, "偶极子复势:~%");
+printf(true, "  W(z) = μ/(2πz)~%~%");
+
+/* 绕圆柱复势：W(z) = U(z + a²/z) + iΓ/(2π)·ln(z) */
+printf(true, "绕圆柱（有环量）复势:~%");
+printf(true, "  W(z) = U(z + a²/z) + iΓ/(2π)·ln(z)~%~%");
+
+/* Kutta-Joukowski定理 */
+printf(true, "Kutta-Joukowski定理:~%");
+printf(true, "  升力 L = ρ·U·Γ（单位展长）~%");
+printf(true, "  阻力 D = 0（d'Alembert佯谬）~%");
+printf(true, "  注意：实际流体有阻力，因为存在粘性和分离~%~%");
+
+printf(true, "流函数与速度势分析完成！~%");

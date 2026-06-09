@@ -1,0 +1,438 @@
+/* ========================================================================= */
+/* Mechanics Applications - Maxima Implementation                            */
+/* ========================================================================= */
+/* 本文件演示变分法在力学中的应用                                            */
+/* 包括：Hamilton原理、Lagrange方程、简谐振子、单摆、中心力场                */
+/* ========================================================================= */
+
+/* 清除工作空间 */
+kill(all)$
+reset()$
+
+/* 关闭二维显示以简化输出 */
+display2d: false$
+
+printf(true, "============================================================~%")$
+printf(true, "       Mechanics Applications - 力学应用                     ~%")$
+printf(true, "============================================================~%~%")$
+
+/* 定义常用物理常数为符号 */
+declare(m, constant)$
+declare(k, constant)$
+declare(g, constant)$
+declare(l, constant)$
+declare(G_grav, constant)$
+declare(M, constant)$
+
+/* ========================================================================= */
+/* 1. Hamilton原理与最小作用量                                               */
+/* ========================================================================= */
+/* Hamilton原理: 真实运动使作用量 S 取驻值                                   */
+/* S = integral_{t1}^{t2} L(q, q', t) dt                                     */
+/* delta S = 0 给出运动方程                                                  */
+/* L = T - V (Lagrange函数 = 动能 - 势能)                                    */
+
+printf(true, "============================================================~%")$
+printf(true, "1. Hamilton原理与最小作用量~%")$
+printf(true, "============================================================~%")$
+printf(true, "   Hamilton原理: delta S = 0~%")$
+printf(true, "   S = integral_{t1}^{t2} L(q, dq/dt, t) dt~%")$
+printf(true, "   L = T - V (动能 - 势能)~%~%")$
+
+/* 声明时间变量和广义坐标 */
+depends(q, t)$
+
+/* 示例: 自由粒子 (一维) */
+printf(true, "   示例1: 自由粒子~%")$
+printf(true, "   T = (1/2)*m*v^2, V = 0~%")$
+printf(true, "   L = (1/2)*m*(dq/dt)^2~%~%")$
+
+L_free: (1/2) * m * diff(q(t), t)^2$
+
+/* 计算E-L方程 */
+L_free_q: diff(L_free, q(t))$
+L_free_qp: diff(L_free, diff(q(t), t))$
+EL_free: ratsimp(L_free_q - diff(L_free_qp, t))$
+
+printf(true, "   dL/dq = ~a~%", L_free_q)$
+printf(true, "   dL/dq' = ~a~%", L_free_qp)$
+printf(true, "   d/dt(dL/dq') = ~a~%", diff(L_free_qp, t))$
+printf(true, "~%")$
+printf(true, "   E-L方程: ~a = 0~%", EL_free)$
+printf(true, "   即: m*q'' = 0~%")$
+printf(true, "   解: q(t) = v0*t + q0 (匀速直线运动)~%~%")$
+
+/* 示例: 抛体运动 (一维竖直方向) */
+printf(true, "   示例2: 抛体运动~%")$
+printf(true, "   T = (1/2)*m*(dq/dt)^2, V = m*g*q~%")$
+printf(true, "   L = (1/2)*m*(dq/dt)^2 - m*g*q~%~%")$
+
+L_throw: (1/2) * m * diff(q(t), t)^2 - m * g * q(t)$
+
+L_throw_q: diff(L_throw, q(t))$
+L_throw_qp: diff(L_throw, diff(q(t), t))$
+EL_throw: ratsimp(L_throw_q - diff(L_throw_qp, t))$
+
+printf(true, "   dL/dq = ~a~%", L_throw_q)$
+printf(true, "   dL/dq' = ~a~%", L_throw_qp)$
+printf(true, "~%")$
+printf(true, "   E-L方程: ~a = 0~%", EL_throw)$
+printf(true, "   即: m*q'' = -m*g => q'' = -g~%")$
+printf(true, "   解: q(t) = -(1/2)*g*t^2 + v0*t + q0~%~%")$
+
+/* 能量守恒的验证 */
+printf(true, "   验证能量守恒:~%")$
+/* 能量 E = q'*dL/dq' - L */
+E_throw: diff(q(t), t) * L_throw_qp - L_throw$
+E_throw_simplified: ratsimp(E_throw)$
+printf(true, "   E = dq/dt * dL/dq' - L = ~a~%", E_throw_simplified)$
+printf(true, "   E = m*v^2/2 + m*g*q = T + V = const~%")$
+printf(true, "   (能量守恒)~%~%")$
+
+/* ========================================================================= */
+/* 2. Lagrange方程: d/dt(dL/dq') - dL/dq = 0                                */
+/* ========================================================================= */
+/* Lagrange方程是Hamilton原理的直接推论                                      */
+/* 对于多自由度系统: d/dt(dL/dqi') - dL/dqi = 0, i=1,...,n                  */
+
+printf(true, "============================================================~%")$
+printf(true, "2. Lagrange方程~%")$
+printf(true, "============================================================~%")$
+printf(true, "   d/dt(dL/dq') - dL/dq = 0~%")$
+printf(true, "   多自由度: d/dt(dL/dqi') - dL/dqi = 0~%~%")$
+
+/* 双粒子系统 (二维) */
+depends(q1, t)$
+depends(q2, t)$
+
+/* 示例: 两个弹簧耦合 */
+/* T = (1/2)*m*(q1'^2 + q2'^2) */
+/* V = (1/2)*k*q1^2 + (1/2)*k*q2^2 + (1/2)*k*(q1-q2)^2 */
+
+printf(true, "   示例: 两个弹簧耦合系统~%")$
+printf(true, "   T = (1/2)*m*(q1'^2 + q2'^2)~%")$
+printf(true, "   V = (1/2)*k*(q1^2 + q2^2 + (q1-q2)^2)~%~%")$
+
+L_coupled: (1/2)*m*(diff(q1(t),t)^2 + diff(q2(t),t)^2) 
+           - (1/2)*k*(q1(t)^2 + q2(t)^2 + (q1(t)-q2(t))^2)$
+
+/* 对 q1 的E-L方程 */
+L_coupled_q1: diff(L_coupled, q1(t))$
+L_coupled_q1p: diff(L_coupled, diff(q1(t), t))$
+EL_coupled_1: ratsimp(L_coupled_q1 - diff(L_coupled_q1p, t))$
+
+printf(true, "   对 q1 的E-L方程:~%")$
+printf(true, "   ~a = 0~%", EL_coupled_1)$
+printf(true, "~%")$
+
+/* 对 q2 的E-L方程 */
+L_coupled_q2: diff(L_coupled, q2(t))$
+L_coupled_q2p: diff(L_coupled, diff(q2(t), t))$
+EL_coupled_2: ratsimp(L_coupled_q2 - diff(L_coupled_q2p, t))$
+
+printf(true, "   对 q2 的E-L方程:~%")$
+printf(true, "   ~a = 0~%", EL_coupled_2)$
+printf(true, "~%")$
+
+/* 方程组矩阵形式 */
+printf(true, "   矩阵形式 M*q'' + K*q = 0:~%")$
+printf(true, "   M = [[m, 0], [0, m]]~%")$
+printf(true, "   K = [[2k, -k], [-k, 2k]]~%~%")$
+
+/* 简正模式: q = A*exp(i*omega*t) */
+/* det(K - omega^2*M) = 0 */
+/* (2k-m*omega^2)^2 - k^2 = 0 */
+/* 2k-m*omega^2 = +/-k */
+/* omega_1^2 = k/m, omega_2^2 = 3k/m */
+
+printf(true, "   简正模式频率:~%")$
+printf(true, "   det(K - omega^2*M) = 0~%")$
+printf(true, "   (2k-m*omega^2)^2 - k^2 = 0~%")$
+printf(true, "   omega_1 = sqrt(k/m) (对称模式: q1=q2)~%")$
+printf(true, "   omega_2 = sqrt(3k/m) (反对称模式: q1=-q2)~%~%")$
+
+/* ========================================================================= */
+/* 3. 简谐振子                                                               */
+/* ========================================================================= */
+/* 最简单的力学系统，Lagrange力学的经典例子                                   */
+/* L = (1/2)*m*x'^2 - (1/2)*k*x^2                                          */
+
+printf(true, "============================================================~%")$
+printf(true, "3. 简谐振子~%")$
+printf(true, "============================================================~%")$
+printf(true, "   L = (1/2)*m*x'^2 - (1/2)*k*x^2~%~%")$
+
+depends(x_func, t)$
+
+L_sho: (1/2)*m*diff(x_func(t), t)^2 - (1/2)*k*x_func(t)^2$
+
+/* E-L方程 */
+L_sho_x: diff(L_sho, x_func(t))$
+L_sho_xp: diff(L_sho, diff(x_func(t), t))$
+EL_sho: ratsimp(L_sho_x - diff(L_sho_xp, t))$
+
+printf(true, "   E-L方程: ~a = 0~%", EL_sho)$
+printf(true, "   即: m*x'' + k*x = 0~%~%")$
+
+/* 求解微分方程 */
+assume(k*m > 0)$
+x_sho_sol: ode2(m*'diff(x_func(t), t, 2) + k*x_func(t) = 0, x_func(t), t)$
+printf(true, "   通解: ~a~%~%", x_sho_sol)$
+
+/* 圆频率和周期 */
+printf(true, "   圆频率: omega = sqrt(k/m)~%")$
+printf(true, "   周期: T = 2*pi/omega = 2*pi*sqrt(m/k)~%~%")$
+
+/* 能量计算 */
+printf(true, "   能量分析:~%")$
+T_sho: (1/2)*m*diff(x_func(t), t)^2$
+V_sho: (1/2)*k*x_func(t)^2$
+
+/* 代入解 x = A*cos(omega*t + phi) */
+omega_sho: sqrt(k/m)$
+x_sol_val: A * cos(omega_sho * t + phi)$
+xp_sol_val: diff(x_sol_val, t)$
+
+T_sho_val: ratsimp(subst([x_func(t)=x_sol_val, diff(x_func(t),t)=xp_sol_val], T_sho))$
+V_sho_val: ratsimp(subst([x_func(t)=x_sol_val, diff(x_func(t),t)=xp_sol_val], V_sho))$
+E_sho_val: ratsimp(T_sho_val + V_sho_val)$
+
+printf(true, "   设 x = A*cos(omega*t + phi)~%")$
+printf(true, "   T = ~a~%", T_sho_val)$
+printf(true, "   V = ~a~%", V_sho_val)$
+printf(true, "   E = T + V = ~a~%", E_sho_val)$
+printf(true, "   E = (1/2)*k*A^2 = const (能量守恒)~%~%")$
+
+/* 相空间分析 */
+printf(true, "   相空间轨道:~%")$
+printf(true, "   x = A*cos(omega*t + phi)~%")$
+printf(true, "   p = m*x' = -m*A*omega*sin(omega*t + phi)~%")$
+printf(true, "   消去 t:~%")$
+printf(true, "   x^2/A^2 + p^2/(m*A*omega)^2 = 1 (椭圆)~%~%")$
+
+/* ========================================================================= */
+/* 4. 单摆的运动方程                                                         */
+/* ========================================================================= */
+/* 单摆是典型的非线性力学系统                                                */
+/* L = (1/2)*m*l^2*theta'^2 + m*g*l*cos(theta)                              */
+
+printf(true, "============================================================~%")$
+printf(true, "4. 单摆的运动方程~%")$
+printf(true, "============================================================~%")$
+printf(true, "   L = (1/2)*m*l^2*theta'^2 + m*g*l*cos(theta)~%~%")$
+
+depends(theta, t)$
+
+L_pend: (1/2)*m*l^2*diff(theta(t), t)^2 + m*g*l*cos(theta(t))$
+
+/* E-L方程 */
+L_pend_th: diff(L_pend, theta(t))$
+L_pend_thp: diff(L_pend, diff(theta(t), t))$
+EL_pend: ratsimp(L_pend_th - diff(L_pend_thp, t))$
+
+printf(true, "   dL/dtheta = ~a~%", L_pend_th)$
+printf(true, "   dL/dtheta' = ~a~%", L_pend_thp)$
+printf(true, "   d/dt(dL/dtheta') = ~a~%", diff(L_pend_thp, t))$
+printf(true, "~%")$
+printf(true, "   E-L方程: ~a = 0~%", EL_pend)$
+printf(true, "   即: m*l^2*theta'' + m*g*l*sin(theta) = 0~%")$
+printf(true, "   或: theta'' + (g/l)*sin(theta) = 0~%~%")$
+
+/* 小角度近似 sin(theta) ~ theta */
+printf(true, "   小角度近似 (sin(theta) ~~ theta):~%")$
+printf(true, "   theta'' + (g/l)*theta = 0~%")$
+printf(true, "   解: theta(t) = A*cos(omega*t + phi)~%")$
+printf(true, "   omega_0 = sqrt(g/l)~%")$
+printf(true, "   周期 T_0 = 2*pi*sqrt(l/g)~%~%")$
+
+/* 能量守恒 */
+printf(true, "   能量守恒:~%")$
+E_pend: (1/2)*m*l^2*diff(theta(t), t)^2 - m*g*l*cos(theta(t))$
+printf(true, "   E = (1/2)*m*l^2*theta'^2 - m*g*l*cos(theta) = const~%~%")$
+
+/* 设 theta'(0) = 0, theta(0) = theta_max */
+printf(true, "   设 theta(0) = theta_max, theta'(0) = 0:~%")$
+printf(true, "   E = -m*g*l*cos(theta_max)~%")$
+printf(true, "   theta'^2 = (2g/l)*(cos(theta) - cos(theta_max))~%~%")$
+
+/* 振动周期 (精确) */
+printf(true, "   精确周期:~%")$
+printf(true, "   T = 4*sqrt(l/(2g)) * integral_0^{theta_max}~%")$
+printf(true, "       dtheta / sqrt(cos(theta) - cos(theta_max))~%")$
+printf(true, "   = T_0 * (2/pi) * K(sin(theta_max/2))~%")$
+printf(true, "   其中 K(k) 是第一类完全椭圆积分~%~%")$
+
+/* Taylor展开近似 */
+printf(true, "   Taylor展开近似 (sin(theta) ~~ theta - theta^3/6):~%")$
+printf(true, "   theta'' + (g/l)*(theta - theta^3/6) = 0~%")$
+printf(true, "   周期修正: T ~~ T_0 * (1 + theta_max^2/16)~%~%")$
+
+/* 数值验证 */
+printf(true, "   数值示例: l=1m, g=9.8 m/s^2~%")$
+T_0_val: 2*%pi*sqrt(1/9.8)$
+printf(true, "   T_0 = ~,4f s (小角度)~%", T_0_val)$
+printf(true, "   theta_max=30 deg: T ~~,4f s~%", T_0_val * (1 + (%pi/6)^2/16))$
+printf(true, "   theta_max=60 deg: T ~~,4f s~%~%", T_0_val * (1 + (%pi/3)^2/16))$
+
+/* ========================================================================= */
+/* 5. 中心力场中的运动                                                       */
+/* ========================================================================= */
+/* 中心力场: V = V(r), 只依赖于距离                                          */
+/* 使用极坐标: T = (1/2)*m*(r'^2 + r^2*theta'^2)                            */
+/* L = (1/2)*m*(r'^2 + r^2*theta'^2) - V(r)                                 */
+
+printf(true, "============================================================~%")$
+printf(true, "5. 中心力场中的运动~%")$
+printf(true, "============================================================~%")$
+printf(true, "   中心力场: V = V(r)~%")$
+printf(true, "   L = (1/2)*m*(r'^2 + r^2*theta'^2) - V(r)~%~%")$
+
+depends(r, t)$
+depends(th, t)$
+
+/* 定义Lagrange函数 (一般中心力场) */
+L_central: (1/2)*m*(diff(r(t),t)^2 + r(t)^2*diff(th(t),t)^2) - V(r(t))$
+
+/* 对 theta 的E-L方程 (theta是循环坐标) */
+L_central_th: diff(L_central, th(t))$
+L_central_thp: diff(L_central, diff(th(t), t))$
+EL_central_th: ratsimp(L_central_th - diff(L_central_thp, t))$
+
+printf(true, "   对 theta 的E-L方程:~%")$
+printf(true, "   ~a = 0~%", EL_central_th)$
+printf(true, "   即: d/dt(m*r^2*theta') = 0~%")$
+printf(true, "   角动量守恒: L = m*r^2*theta' = const~%~%")$
+
+/* 对 r 的E-L方程 */
+L_central_r: diff(L_central, r(t))$
+L_central_rp: diff(L_central, diff(r(t), t))$
+EL_central_r: ratsimp(L_central_r - diff(L_central_rp, t))$
+
+printf(true, "   对 r 的E-L方程:~%")$
+printf(true, "   ~a = 0~%", EL_central_r)$
+printf(true, "   即: m*r'' - m*r*theta'^2 + dV/dr = 0~%~%")$
+
+/* 利用角动量守恒消去 theta' */
+printf(true, "   利用角动量守恒 L = m*r^2*theta':~%")$
+printf(true, "   theta' = L/(m*r^2)~%")$
+printf(true, "   m*r'' - L^2/(m*r^3) + dV/dr = 0~%~%")$
+
+/* 等效势 */
+printf(true, "   等效一维问题:~%")$
+printf(true, "   m*r'' = -dV_eff/dr~%")$
+printf(true, "   V_eff(r) = V(r) + L^2/(2*m*r^2)~%")$
+printf(true, "   (离心势能项)~%~%")$
+
+/* 特例: 万有引力 V(r) = -G*M*m/r */
+printf(true, "   特例: 万有引力 V(r) = -G_grav*M*m/r~%~%")$
+
+/* 等效势 */
+printf(true, "   V_eff(r) = -G_grav*M*m/r + L^2/(2*m*r^2)~%")$
+printf(true, "   dV_eff/dr = G_grav*M*m/r^2 - L^2/(m*r^3) = 0~%")$
+printf(true, "   r_0 = L^2/(G_grav*M*m^2) (圆轨道半径)~%~%")$
+
+/* 圆轨道条件 */
+printf(true, "   圆轨道分析:~%")$
+printf(true, "   在 r=r_0 处:~%")$
+printf(true, "   G_grav*M*m/r_0^2 = m*v^2/r_0 (向心力=引力)~%")$
+printf(true, "   v = sqrt(G_grav*M/r_0) (轨道速度)~%")$
+printf(true, "   T = 2*pi*r_0/v = 2*pi*sqrt(r_0^3/(G_grav*M))~%")$
+printf(true, "   即 Kepler第三定律: T^2 ~~ r_0^3~%~%")$
+
+/* 轨道方程 (Binet方程) */
+printf(true, "   轨道方程 (Binet方程):~%")$
+printf(true, "   令 u = 1/r~%")$
+printf(true, "   d^2u/dtheta^2 + u = -m*r^2 * F(r) / L^2~%")$
+printf(true, "   其中 F(r) = -dV/dr 是力~%~%")$
+
+/* 万有引力: F(r) = -G*M*m/r^2 */
+printf(true, "   万有引力 F(r) = -G_grav*M*m/r^2:~%")$
+printf(true, "   d^2u/dtheta^2 + u = G_grav*M*m^2 / L^2~%")$
+printf(true, "   令 alpha = G_grav*M*m^2/L^2~%")$
+printf(true, "   u = alpha + A*cos(theta - theta_0)~%")$
+printf(true, "   r = 1/(alpha + A*cos(theta))~%~%")$
+
+printf(true, "   这是圆锥曲线方程:~%")$
+printf(true, "   r = p/(1 + e*cos(theta))~%")$
+printf(true, "   其中 p = 1/alpha = L^2/(G_grav*M*m^2)~%")$
+printf(true, "   e = A/alpha (偏心率)~%~%")$
+
+/* 偏心率与轨道类型 */
+printf(true, "   轨道类型:~%")$
+printf(true, "   e = 0: 圆轨道~%")$
+printf(true, "   0 < e < 1: 椭圆轨道~%")$
+printf(true, "   e = 1: 抛物线轨道~%")$
+printf(true, "   e > 1: 双曲线轨道~%~%")$
+
+/* 能量分析 */
+printf(true, "   能量分析:~%")$
+printf(true, "   E = T + V = (1/2)*m*(r'^2 + r^2*theta'^2) - G_grav*M*m/r~%")$
+printf(true, "   利用角动量守恒:~%")$
+printf(true, "   E = (1/2)*m*r'^2 + V_eff(r)~%")$
+printf(true, "   椭圆轨道: E < 0~%")$
+printf(true, "   抛物线: E = 0~%")$
+printf(true, "   双曲线: E > 0~%~%")$
+
+/* 数值示例: 地球轨道 */
+printf(true, "   数值示例: 地球轨道~%")$
+r_earth: 1.496e11$  /* 日地距离 (m) */
+G_val: 6.674e-11$   /* 引力常数 */
+M_sun: 1.989e30$    /* 太阳质量 (kg) */
+v_earth: sqrt(G_val * M_sun / r_earth)$
+T_earth: 2*%pi*r_earth / v_earth$
+
+printf(true, "   轨道半径: ~,3e m~%", r_earth)$
+printf(true, "   轨道速度: ~,3f m/s~%", v_earth)$
+printf(true, "   轨道周期: ~,3e s ~,2f 天~%~%", T_earth, T_earth/86400)$
+
+/* ========================================================================= */
+/* 6. Routh约化: 消去循环坐标                                                */
+/* ========================================================================= */
+/* 当Lagrange函数不显含某坐标 qi (循环坐标)时                                */
+/* 定义Routh函数 R = L - pi*qi', 其中 pi = dL/dqi' = const                   */
+/* R只依赖于非循环坐标，减少了自由度                                         */
+
+printf(true, "============================================================~%")$
+printf(true, "6. Routh约化~%")$
+printf(true, "============================================================~%")$
+printf(true, "   循环坐标: L 不显含 qi => pi = dL/dqi' = const~%")$
+printf(true, "   Routh函数: R = L - pi*qi'~%")$
+printf(true, "   约化后的Lagrange方程只含非循环坐标~%~%")$
+
+/* 示例: 中心力场问题中消去 theta */
+printf(true, "   示例: 中心力场问题消去 theta~%")$
+printf(true, "   L = (1/2)*m*(r'^2 + r^2*theta'^2) - V(r)~%")$
+printf(true, "   p_theta = dL/dtheta' = m*r^2*theta' = l_ang (角动量)~%")$
+printf(true, "   theta' = l_ang/(m*r^2)~%~%")$
+
+/* Routh函数 (使用 l_ang 表示角动量) */
+declare(l_ang, constant)$
+R_reduced: (1/2)*m*diff(r(t),t)^2 + l_ang^2/(2*m*r(t)^2) - V(r(t))$
+printf(true, "   R = (1/2)*m*r'^2 + l_ang^2/(2*m*r^2) - V(r)~%")$
+printf(true, "   R = (1/2)*m*r'^2 - V_eff(r)~%")$
+printf(true, "   其中 V_eff = V(r) - l_ang^2/(2*m*r^2)~%~%")$
+
+/* 约化后的E-L方程 */
+R_r: diff(R_reduced, r(t))$
+R_rp: diff(R_reduced, diff(r(t), t))$
+EL_reduced: ratsimp(R_r - diff(R_rp, t))$
+
+printf(true, "   约化后的E-L方程:~%")$
+printf(true, "   ~a = 0~%", EL_reduced)$
+printf(true, "   即: m*r'' + l_ang^2/(m*r^3) + dV/dr = 0~%")$
+printf(true, "   与之前推导一致!~%~%")$
+
+/* ========================================================================= */
+/* 总结                                                                       */
+/* ========================================================================= */
+printf(true, "============================================================~%")$
+printf(true, "                         总结~%")$
+printf(true, "============================================================~%")$
+printf(true, "1. Hamilton原理: delta S = 0 给出运动方程~%")$
+printf(true, "2. Lagrange方程: d/dt(dL/dq') - dL/dq = 0~%")$
+printf(true, "3. 简谐振子: m*x'' + k*x = 0, T=2*pi*sqrt(m/k)~%")$
+printf(true, "4. 单摆: theta'' + (g/l)*sin(theta) = 0~%")$
+printf(true, "5. 中心力场: 角动量守恒 + Kepler定律~%")$
+printf(true, "6. Routh约化: 消去循环坐标，减少自由度~%~%")$
+
+printf(true, "Done.~%")$

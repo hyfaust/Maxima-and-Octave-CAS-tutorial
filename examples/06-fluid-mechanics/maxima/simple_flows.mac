@@ -1,0 +1,272 @@
+/* Simple Flow Solutions - Maxima Implementation */
+/* 简单流动解 - Maxima实现 */
+/*
+ * 物理背景：
+ *   求解几种经典的层流流动解析解
+ *   包括管道流动（Poiseuille）、平板间流动（Couette）、
+ *   低Reynolds数流动（Stokes）和势流绕圆柱
+ *   这些解是流体力学的基础，也是验证数值方法的标准算例
+ *
+ * 作者: CAS Learn Tutorial
+ */
+
+/* 1. Poiseuille流动（圆管中的层流） */
+printf(true, "=== Poiseuille流动（圆管层流） ===~%~%");
+
+/* 物理描述：粘性流体在恒定压力梯度驱动下在圆管中的稳态流动 */
+/* 假设：稳态、不可压缩、充分发展、轴对称 */
+/* 坐标：柱坐标 (r, θ, z)，流动方向为z */
+
+assume(r > 0);
+assume(R_pipe > 0);
+assume(mu_pipe > 0);
+declare(dpdz, real);
+
+/* 控制方程（简化后的z方向动量方程） */
+/* 0 = -dp/dz + μ(1/r)d/dr(r·dv_z/dr) */
+/* 边界条件：v_z(R) = 0（无滑移），v_z(0) 有限 */
+
+/* 求解ODE */
+/* d/dr(r·dv_z/dr) = (r/μ)(dp/dz) */
+/* 积分两次，应用边界条件 */
+
+/* 解析解 */
+v_z_poiseuille: -(dpdz) / (4 * mu_pipe) * (R_pipe^2 - r^2);
+
+printf(true, "Poiseuille流动解:~%");
+printf(true, "  控制方程: 0 = -dp/dz + μ(1/r)d/dr(r·dv_z/dr)~%");
+printf(true, "  边界条件: v_z(R) = 0, v_z(0) 有限~%~%");
+printf(true, "  速度分布: v_z(r) = -(1/4μ)(dp/dz)(R² - r²)~%");
+printf(true, "  即: ~a~%~%", v_z_poiseuille);
+
+/* 最大速度（在管道中心 r=0） */
+v_max: -dpdz * R_pipe^2 / (4 * mu_pipe);
+printf(true, "最大速度（中心线）:~%");
+printf(true, "  v_max = -(R²/4μ)(dp/dz) = ~a~%~%", v_max);
+
+/* 体积流量（对截面积分） */
+/* Q = ∫₀ᴿ v_z(r)·2πr·dr */
+Q_flow: integrate(v_z_poiseuille * 2 * %pi * r, r, 0, R_pipe);
+Q_flow: ratsimp(Q_flow);
+printf(true, "体积流量（Hagen-Poiseuille定律）:~%");
+printf(true, "  Q = ∫₀ᴿ v_z·2πr·dr = ~a~%", Q_flow);
+printf(true, "  Q = (πR⁴/8μ)|dp/dz|~%~%");
+
+/* 平均速度 */
+v_avg: Q_flow / (%pi * R_pipe^2);
+v_avg: ratsimp(v_avg);
+printf(true, "平均速度:~%");
+printf(true, "  v_avg = Q/(πR²) = ~a~%", v_avg);
+printf(true, "  即 v_avg = v_max / 2~%~%");
+
+/* 壁面剪应力 */
+tau_wall: mu_pipe * subst(r=R_pipe, diff(v_z_poiseuille, r));
+tau_wall: ratsimp(tau_wall);
+printf(true, "壁面剪应力:~%");
+printf(true, "  τ_w = μ(dv_z/dr)|_(r=R) = ~a~%", tau_wall);
+printf(true, "  τ_w = (R/2)|dp/dz|~%~%");
+
+/* 摩擦系数 */
+assume(Re_p > 0);
+printf(true, "摩擦系数:~%");
+printf(true, "  Darcy摩擦系数: f = 64/Re~%");
+printf(true, "  其中 Re = ρ·v_avg·D/μ, D = 2R~%~%");
+
+/* 2. Couette流动（平行平板间流动） */
+printf(true, "=== Couette流动（平行平板间流动） ===~%~%");
+
+/* 物理描述：两平行平板间的粘性流动 */
+/* 下板固定，上板以速度U运动 */
+/* 可能同时存在压力梯度驱动 */
+
+declare(y_c, real);
+assume(U_plate > 0);
+assume(h > 0);
+declare(K_param, real);
+
+/* 控制方程 */
+/* 0 = dp/dx + μ·d²v_x/dy² */
+/* 边界条件：v_x(0) = 0, v_x(h) = U */
+
+/* 一般Couette-Poiseuille组合解 */
+/* v_x(y) = U(y/h) + (h²/2μ)(-dp/dx)(y/h)(1 - y/h) */
+printf(true, "Couette-Poiseuille组合流动:~%");
+printf(true, "  下板 y=0 固定，上板 y=h 以速度U运动~%");
+printf(true, "  同时存在压力梯度 dp/dx~%~%");
+printf(true, "  速度分布: v_x(y) = U(y/h) + (h²/2μ)(-dp/dx)(y/h)(1-y/h)~%~%");
+
+/* 纯Couette流动（无压力梯度） */
+printf(true, "纯Couette流动（dp/dx = 0）:~%");
+printf(true, "  v_x(y) = U·y/h （线性分布）~%");
+printf(true, "  剪应力: τ = μU/h = 常数~%~%");
+
+/* 纯Poiseuille流动（无上板运动） */
+printf(true, "纯压力驱动流动（U = 0）:~%");
+printf(true, "  v_x(y) = (h²/2μ)(-dp/dx)(y/h)(1-y/h)~%");
+printf(true, "  最大速度在 y = h/2: v_max = (h²/8μ)(-dp/dx)~%");
+printf(true, "  平均速度: v_avg = (2/3)v_max~%~%");
+
+/* 3. Stokes流动（低Reynolds数流动） */
+printf(true, "=== Stokes流动（低Reynolds数流动） ===~%~%");
+
+/* Stokes方程：0 = -∇p + μ∇²v */
+/* 特点：忽略惯性项，方程线性化 */
+
+assume(nu_st > 0);
+assume(U_wall > 0);
+
+/* Stokes第一问题：突然启动的平板（Stokes振荡层） */
+/* ∂u/∂t = ν·∂²u/∂y² */
+/* 边界条件：u(0,t) = U, u(y,0) = 0, u(∞,t) = 0 */
+
+/* 解析解（用误差函数表示） */
+/* u(y,t) = U·erfc(y/(2√(νt))) */
+/* 或用相似变量 η = y/(2√(νt)): u = U·erfc(η) */
+
+printf(true, "Stokes第一问题（突然启动平板）:~%");
+printf(true, "  控制方程: ∂u/∂t = ν·∂²u/∂y²~%");
+printf(true, "  边界条件: u(0,t) = U, u(y,0) = 0, u(∞,t) = 0~%");
+printf(true, "  解析解: u(y,t) = U·erfc(y/(2√(νt)))~%");
+printf(true, "  相似变量: η = y/(2√(νt))~%");
+printf(true, "  无量纲解: u/U = erfc(η)~%~%");
+
+/* Stokes层厚度 */
+/* δ ~ √(νt) */
+printf(true, "Stokes层厚度:~%");
+printf(true, "  δ ~~ √(νt)~%");
+printf(true, "  粘性扩散的特征尺度~%~%");
+
+/* 4. Stokes流动 - 绕球流动 */
+printf(true, "=== Stokes流动 - 绕球流动 ===~%~%");
+
+/* Stokes绕球流动的解 */
+/* 适用于 Re = ρUd/μ << 1 */
+
+assume(a_sphere > 0);
+assume(U_inf_s > 0);
+assume(r_s > 0);
+declare(theta_s, real);
+
+/* 速度场（球坐标） */
+/* v_r = U·cos(θ)[1 - (3a)/(2r) + a³/(2r³)] */
+/* v_θ = -U·sin(θ)[1 - (3a)/(4r) - a³/(4r³)] */
+
+printf(true, "Stokes绕球流动解:~%");
+printf(true, "  v_r = U·cos(θ)[1 - 3a/(2r) + a³/(2r³)]~%");
+printf(true, "  v_θ = -U·sin(θ)[1 - 3a/(4r) - a³/(4r³)]~%~%");
+
+/* Stokes阻力公式（阻力 = 6πμaU） */
+D_stokes: 6 * %pi * mu_pipe * a_sphere * U_inf_s;
+printf(true, "Stokes阻力公式:~%");
+printf(true, "  D = 6πμaU = ~a~%", D_stokes);
+printf(true, "  阻力系数: C_D = 24/Re~%~%");
+
+/* 修正：Oseen近似（考虑部分惯性效应） */
+/* D = 6πμaU(1 + 3Re/16) */
+assume(Re_s > 0);
+D_oseen: D_stokes * (1 + 3 * Re_s / 16);
+printf(true, "Oseen修正:~%");
+printf(true, "  D = 6πμaU(1 + 3Re/16)~%");
+printf(true, "  适用于 Re < 1 的修正~%~%");
+
+/* 5. 势流绕圆柱（补充详细分析） */
+printf(true, "=== 势流绕圆柱（详细分析） ===~%~%");
+
+/* 复势：W(z) = U(z + a²/z) */
+/* 速度分量（柱坐标） */
+/* v_r = U(1 - a²/r²)cos(θ) */
+/* v_θ = -U(1 + a²/r²)sin(θ) */
+
+assume(a_cyl > 0);
+
+v_r_potential: U_inf * (1 - a_cyl^2/r^2) * cos(theta);
+v_theta_potential: -U_inf * (1 + a_cyl^2/r^2) * sin(theta);
+
+printf(true, "势流绕圆柱速度场:~%");
+printf(true, "  v_r = U(1 - a²/r²)cos(θ)~%");
+printf(true, "  v_θ = -U(1 + a²/r²)sin(θ)~%~%");
+
+/* 圆柱表面速度 */
+v_theta_surface: subst(r=a_cyl, v_theta_potential);
+printf(true, "圆柱表面速度 (r = a):~%");
+printf(true, "  v_θ = -2U·sin(θ)~%");
+printf(true, "  v_r = 0~%~%");
+
+/* 速度在驻点为零 */
+printf(true, "驻点位置: θ = 0 和 θ = π (前驻点和后驻点)~%~%");
+
+/* 压力系数 */
+/* Cp = 1 - (v/U)² = 1 - 4sin²(θ) */
+Cp: 1 - 4 * sin(theta)^2;
+printf(true, "压力系数分布:~%");
+printf(true, "  Cp(θ) = 1 - 4sin²(θ)~%");
+printf(true, "  前驻点 θ=0: Cp = 1（总压）~%");
+printf(true, "  侧壁 θ=π/2: Cp = -3（最大吸力）~%");
+printf(true, "  后驻点 θ=π: Cp = 1（总压恢复）~%~%");
+
+/* 总阻力（d'Alembert佯谬） */
+printf(true, "d'Alembert佯谬:~%");
+printf(true, "  理想流体势流理论预测：圆柱阻力为零~%");
+printf(true, "  这与实验不符，因为忽略了粘性和流动分离~%");
+printf(true, "  实际流动中，边界层分离导致压差阻力~%~%");
+
+/* 6. 数值计算：Poiseuille流动的解析解验证 */
+printf(true, "=== Poiseuille流动数值计算 ===~%~%");
+
+/* 参数设置 */
+R_val: 1.0;       /* 管道半径 */
+mu_val: 1.0;      /* 粘度 */
+dpdz_val: -1.0;   /* 压力梯度（负值，驱动流动） */
+
+/* 在不同径向位置计算速度 */
+r_values: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+printf(true, "Poiseuille流动速度分布:~%");
+printf(true, "  R = %.1f, μ = %.1f, dp/dz = %.1f~%", R_val, mu_val, dpdz_val);
+printf(true, "  r/R    | v_z/v_max~%");
+printf(true, "  -------|----------~%");
+
+for r_i in r_values do block(
+  v_i: -dpdz_val / (4 * mu_val) * (R_val^2 - r_i^2),
+  v_max_i: -dpdz_val * R_val^2 / (4 * mu_val),
+  printf(true, "  %.1f    | %.4f~%", r_i, v_i/v_max_i)
+);
+
+printf(true, "~%");
+
+/* 7. Couette流动数值示例 */
+printf(true, "=== Couette流动数值示例 ===~%~%");
+
+/* 参数 */
+U_val: 1.0;       /* 上板速度 */
+h_val: 1.0;       /* 板间距 */
+mu_val_c: 1.0;    /* 粘度 */
+
+/* 不同压力梯度参数 K */
+K_values: [-0.3, 0.0, 0.3];
+K_labels: ["逆压梯度 (K=-0.3)", "纯Couette (K=0)", "顺压梯度 (K=0.3)"];
+
+y_values: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+
+printf(true, "Couette-Poiseuille组合流动速度分布:~%~%");
+
+for K_i in K_values do block(
+  printf(true, "  K = %.1f:~%", K_i),
+  printf(true, "  y/h    | v_x/U~%"),
+  printf(true, "  -------|-------~%"),
+  for y_i in y_values do block(
+    v_i: U_val * (y_i / h_val) + K_i * (y_i / h_val) * (1 - y_i / h_val),
+    printf(true, "  %.1f    | %.4f~%", y_i, v_i)
+  ),
+  printf(true, "~%")
+);
+
+/* 8. 总结 */
+printf(true, "=== 简单流动解总结 ===~%~%");
+printf(true, "流动类型        | 特征参数    | 速度分布         | 应用~%");
+printf(true, "----------------|-------------|------------------|------------------~%");
+printf(true, "Poiseuille (管) | Re < 2300   | 抛物线           | 管道流动~%");
+printf(true, "Couette (板)    | 任意Re      | 线性+抛物线      | 润滑、测量~%");
+printf(true, "Stokes (球)     | Re << 1     | 解析解           | 微流体、粉尘~%");
+printf(true, "势流 (圆柱)     | 理想流体    | 解析解           | 理论分析~%~%");
+
+printf(true, "简单流动解分析完成！~%");

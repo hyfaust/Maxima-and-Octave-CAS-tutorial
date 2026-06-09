@@ -1,0 +1,217 @@
+/* 第3章：线性代数 - 矩阵基本运算 */
+/* 本文件演示如何在Maxima中进行符号矩阵的基本运算 */
+/* 包括：矩阵创建、加法、乘法、行列式、逆矩阵等 */
+
+/* 显示说明 */
+display("=== 矩阵基本运算示例 ===")$
+
+/* 辅助函数：计算矩阵的迹 */
+mat_trace(M) := block([n: length(M)], sum(M[i][i], i, 1, n))$
+
+/* 1. 矩阵的创建 */
+display("--- 1. 矩阵的创建 ---")$
+
+/* 创建数值矩阵 */
+A_num: matrix([1, 2, 3], [4, 5, 6], [7, 8, 9])$
+display("数值矩阵 A:")$
+display(A_num)$
+
+/* 创建符号矩阵 */
+S: matrix([a, b], [c, d])$
+display("符号矩阵 S:")$
+display(S)$
+
+/* 创建特殊矩阵 */
+Z: zeromatrix(3, 3)$              /* 3x3 零矩阵 */
+I: ident(3)$                      /* 3x3 单位矩阵 */
+D: matrix([1, 0, 0], [0, 2, 0], [0, 0, 3])$  /* 对角矩阵 */
+
+display("零矩阵 Z:")$
+display(Z)$
+display("单位矩阵 I:")$
+display(I)$
+display("对角矩阵 D:")$
+display(D)$
+
+/* 2. 矩阵加法与数乘 */
+display("--- 2. 矩阵加法与数乘 ---")$
+
+/* 定义两个矩阵 */
+A: matrix([1, 2], [3, 4])$
+B: matrix([5, 6], [7, 8])$
+
+display("矩阵 A:")$
+display(A)$
+display("矩阵 B:")$
+display(B)$
+
+/* 矩阵加法 */
+C_add: A + B$
+display("A + B:")$
+display(C_add)$
+
+/* 数乘 */
+k: 3$
+C_scalar: k * A$
+display("3 * A:")$
+display(C_scalar)$
+
+/* 矩阵减法 */
+C_sub: A - B$
+display("A - B:")$
+display(C_sub)$
+
+/* 3. 矩阵乘法 */
+display("--- 3. 矩阵乘法 ---")$
+
+/* 2x2 矩阵乘法 - 注意：Maxima中矩阵乘法使用"."运算符 */
+C_mult: A . B$
+display("A . B:")$
+display(C_mult)$
+
+/* 注意：矩阵乘法不满足交换律 */
+C_mult_rev: B . A$
+display("B . A:")$
+display(C_mult_rev)$
+
+/* 验证 A.B != B.A */
+display("A.B - B.A:")$
+display(C_mult - C_mult_rev)$
+
+/* 4. 矩阵转置 */
+display("--- 4. 矩阵转置 ---")$
+
+/* 转置 */
+A_trans: transpose(A)$
+display("A 的转置:")$
+display(A_trans)$
+
+/* 对于复数矩阵，使用 hermitian 进行共轭转置 */
+M_complex: matrix([1+2*%i, 3+4*%i], [5+6*%i, 7+8*%i])$
+display("复数矩阵 M:")$
+display(M_complex)$
+
+M_trans: transpose(M_complex)$
+display("转置 M^T:")$
+display(M_trans)$
+
+/* 5. 行列式 */
+display("--- 5. 行列式 ---")$
+
+/* 2x2 矩阵的行列式 */
+det_A: determinant(A)$
+display("det(A) =")$
+display(det_A)$
+
+/* 3x3 矩阵的行列式 */
+C: matrix([1, 2, 3], [0, 1, 4], [5, 6, 0])$
+display("矩阵 C:")$
+display(C)$
+det_C: determinant(C)$
+display("det(C) =")$
+display(det_C)$
+
+/* 符号行列式 */
+S_det: matrix([x, y], [1-x, 1+y])$
+det_S: ratsimp(determinant(S_det))$
+display("符号行列式 det([x, y; 1-x, 1+y]) =")$
+display(det_S)$
+
+/* 6. 逆矩阵 */
+display("--- 6. 逆矩阵 ---")$
+
+/* 数值逆矩阵 */
+A_inv: invert(A)$
+display("A 的逆矩阵:")$
+display(A_inv)$
+
+/* 验证 A * A^(-1) = I */
+check: ratsimp(A . A_inv)$
+display("验证 A . A^(-1):")$
+display(check)$
+
+/* 符号逆矩阵 */
+S_inv: invert(S)$
+display("符号矩阵 S 的逆:")$
+display(S_inv)$
+
+/* 7. 矩阵的秩 */
+display("--- 7. 矩阵的秩 ---")$
+
+rank_A: rank(A)$
+display("A 的秩 =")$
+display(rank_A)$
+
+/* 秩亏矩阵 */
+A_singular: matrix([1, 2, 3], [4, 5, 6], [7, 8, 9])$
+rank_singular: rank(A_singular)$
+display("奇异矩阵的秩 =")$
+display(rank_singular)$
+
+/* 8. 物理应用：惯性张量 */
+display("--- 8. 物理应用：惯性张量 ---")$
+
+/* 假设一个质量为 m 的长方体，边长为 a, b, c */
+/* 惯性张量（绕质心） */
+I_tensor: matrix(
+  [(b^2 + c^2)/12, 0, 0],
+  [0, (a^2 + c^2)/12, 0],
+  [0, 0, (a^2 + b^2)/12]
+)$
+I_tensor: m * I_tensor$
+
+display("长方体的惯性张量:")$
+display(I_tensor)$
+
+/* 计算行列式（主惯性矩的乘积） */
+det_I: ratsimp(determinant(I_tensor))$
+display("惯性张量的行列式:")$
+display(det_I)$
+
+/* 9. 矩阵的迹 */
+display("--- 9. 矩阵的迹 ---")$
+
+trace_A: mat_trace(A)$
+display("A 的迹 =")$
+display(trace_A)$
+
+/* 符号迹 */
+trace_S: mat_trace(S)$
+display("符号矩阵 S 的迹 =")$
+display(trace_S)$
+
+/* 10. 矩阵的幂 */
+display("--- 10. 矩阵的幂 ---")$
+
+A_sq: A . A$
+display("A^2:")$
+display(A_sq)$
+
+A_3: A . A . A$
+display("A^3:")$
+display(A_3)$
+
+/* 计算矩阵的高次幂 */
+A_5: A . A . A . A . A$
+display("A^5:")$
+display(A_5)$
+
+/* 11. 子矩阵操作 */
+display("--- 11. 子矩阵操作 ---")$
+
+/* 提取子矩阵 */
+M: matrix([1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16])$
+display("4x4 矩阵 M:")$
+display(M)$
+
+/* 提取第2-3行，第1-2列 */
+sub_M: genmatrix(lambda([i,j], M[i+1][j]), 2, 2)$
+display("子矩阵 (行2-3, 列1-2):")$
+display(sub_M)$
+
+/* 删除第2行和第3列 */
+minor_M: minor(M, 2, 3)$
+display("删除第2行第3列的余子式:")$
+display(minor_M)$
+
+display("=== 矩阵基本运算示例完成 ===")$
