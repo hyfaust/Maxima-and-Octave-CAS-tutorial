@@ -118,4 +118,4 @@ sudo apt install maxima
 
 ## 许可证
 
-本教程基于MIT协议发布。
+本教程基于GPL v3协议发布。

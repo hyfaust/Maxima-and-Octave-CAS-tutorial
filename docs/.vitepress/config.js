@@ -81,7 +81,8 @@ export default defineConfig({
   },
   vite: {},
   head: [
-    ['link', { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css' }]
+    ['link', { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/Maxima-and-Octave-CAS-tutorial/favicon.svg' }]
   ],
   theme: {
     custom: true
